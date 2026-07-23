@@ -31,14 +31,19 @@ Everything below grows that loop. Nothing starts over.
   check exists and is green — the only missing piece is enforcement.
 - Does not unlock: any new runtime capability
 
-## Task 2: Spine flow (Qallow, VEYN pairs) — BLOCKED ON TASK 1
+## Task 2: Spine flow (Qallow, VEYN pairs) — NETWORK TRANSPORT REMAINING (July 22, 2026)
 - Detail: harness-roadmap/02-spine-flow.md
 - Repos: DUCTEI, Qallow, then VEYN (rev-pin bump per landing)
-- Order inside the task: Qallow pair first (conformance oracle exists),
-  VEYN pair second (producer of trace events), network transport last
+- Order inside the task: Qallow pair first (conformance oracle exists) —
+  DONE, DUCTEI@2cb9e68 + Qallow@0a546b3. VEYN pair second (producer of
+  trace events) — DONE, DUCTEI@5d750b8 + VEYN@1913f41. Network
+  transport last — NOT STARTED.
 - Done when: three real consumers flow through DUCTEI under the five
-  invariants, each with its four smoke scenarios in CI
-- Unlocks: DUCTEI becomes the actual spine; precondition for Tasks 3 and 4
+  invariants, each with its four smoke scenarios in CI — MET for all
+  three (LIMEN, Qallow, VEYN), all green on DUCTEI main:
+  https://github.com/xingxerx/DUCTEI/actions/runs/29976969294
+- Unlocks: DUCTEI becomes the actual spine (true in fact now, not just
+  design); precondition for Tasks 3 and 4
 - Does not unlock: self-modification; flow is still human-initiated
 
 ## Task 3: Self-improvement loop — BLOCKED ON TASK 1

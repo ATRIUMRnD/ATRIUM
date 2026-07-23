@@ -3,6 +3,14 @@
 Audited from live repos, July 22 2026:
 DUCTEI @ 7433317, LIMEN @ fd3f505, VEYN main, Qallow main, ATRIUM master.
 
+## Status update (July 22 2026, later same day)
+
+GAPs 0, 1, 2, 3, 5 built and verified — see section 5 below for what
+actually happened, including two things this audit didn't predict
+(VEYN's bridge was already daemon-wired; VEYN's CI build needed system
+packages the audit didn't flag). GAP 4 (network transport) and GAP 6
+(self-improvement loop) remain, per the original build order.
+
 ## 1. What exists and is connected (verified in source)
 
 | Connection | State | Evidence |
@@ -113,7 +121,7 @@ Repos: LIMEN, DUCTEI, ATRIUM
 5. GAP 6 after GAP 0, parallel to 2/3 if desired (different repos)
 6. GAP 4 last
 
-## 4. Honest status line
+## 4. Honest status line (as audited, superseded by section 5)
 
 The harness exists and is CI-verified for one producer/consumer pair.
 Two more pairs have their hard parts (codecs, adapters, persistence,
@@ -122,3 +130,52 @@ thing: the small process at each end that actually moves the bytes,
 plus the smoke scenarios that prove it. That is deliberate, bounded
 work with a proven template (relay.rs). No unknown-unknowns surfaced
 in the audit.
+
+## 5. What actually happened
+
+- **GAP 0**: e2e-smoke confirmed green on DUCTEI main
+  (run 29975187862). Branch protection (required status checks on
+  DUCTEI main) is BLOCKED — repo-settings changes need explicit owner
+  action, an agent can't flip them unilaterally. ROADMAP.md Task 1
+  flipped to "GREEN, PROTECTION PENDING" with the owner action spelled
+  out. Everything downstream proceeded treating the check as
+  functionally live (it runs and is green; it just isn't yet
+  merge-blocking).
+- **GAP 1**: VEYN's DUCTEI rev pin bumped dcd4657 -> 7433317
+  (VEYN@da747ec). 71/71 tests passed against the new rev.
+- **GAP 2**: built exactly as scoped — ductei-qallow-relay
+  (DUCTEI@2cb9e68) mirroring relay.rs, `qallow ingest`/`qallow get`
+  subcommands (Qallow@0a546b3) calling the real ql_persist_merge_blob(),
+  scripts/smoke_qallow.py (4 scenarios / 17 checks), e2e-smoke-qallow in
+  CI. Verified live on-box before CI: real LMDB round-trip via
+  `qallow get`. Green in CI: run 29976231339.
+- **GAP 3**: the audit's own premise ("adapter exists, daemon wiring
+  does not") turned out to be stale — VEYN's dispatcher already writes
+  directly into a DUCTEI channel in-process
+  (veyn-core/src/ductei_bridge.rs, built in an earlier session, missed
+  by this audit). No ductei-veyn-relay binary was needed; instead added
+  a `[lib]` target to veyn-core (VEYN@1913f41) so a smoke harness
+  (ductei_bridge_smoke) can drive the real bridge without booting the
+  full daemon, then reused ductei-qallow-relay completely unmodified as
+  the second hop. scripts/smoke_veyn.py: 4 scenarios tailored to this
+  pair's actual architecture (good event, restart replicability,
+  coalescing via the real CoalescePolicy, malformed input rejected) / 13
+  checks. Two CI-only fixes needed along the way that the audit didn't
+  predict: system dev packages (libdbus-1-dev, libasound2-dev,
+  libudev-dev) for VEYN's BLE/audio/HID adapter crates, and surfacing
+  cargo's stderr on build failure (the first fix attempt failed silently
+  without it). Green in CI: run 29976969294.
+- **GAP 5**: all four repos (DUCTEI, LIMEN, Qallow, VEYN) now link their
+  README to ATRIUM as the governance/constitution repo. ATRIUM's own
+  branch protection is BLOCKED for the same reason as GAP 0's — repo
+  settings need explicit owner action via
+  https://github.com/xingxerx/ATRIUM/settings/branches. LIMEN's
+  CODE_OF_CONDUCT.md candidacy noted but not actioned (a future
+  decision, not a build step this pass).
+- **GAP 4, GAP 6**: not started, per the original build order (GAP 4
+  explicitly waits on two local pairs in CI, now satisfied; GAP 6 is a
+  separate LIMEN-primary effort).
+
+Every commit above is pushed to each repo's real `main`/`master` and
+independently green on GitHub Actions — nothing here is a local-only or
+simulated result.
