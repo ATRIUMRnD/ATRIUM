@@ -1,0 +1,8 @@
+# ATRIUM holds only rules, routing, and roadmap documents — no code.
+# The rooms (owned repos) and local tooling are checked out here but
+# tracked in their own repositories, not this one.
+/DUCTEI/
+/LIMEN/
+/Qallow/
+/VEYN/
+/dayroom0/
