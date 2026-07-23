@@ -13,13 +13,22 @@ invariant-checked results. Smoke test passed on all four scenarios:
 good job, restart replicability, malformed request, malformed cert.
 Everything below grows that loop. Nothing starts over.
 
-## Task 1: CI harness — ACTIVE
+## Task 1: CI harness — GREEN, PROTECTION PENDING (July 22, 2026)
 - Detail: harness-roadmap/01-ci-harness.md
 - Repos: DUCTEI (primary), LIMEN (pinned rev, simulator path)
 - Deliverable: checked-in smoke script + GitHub Actions job replaying the
-  four scenarios per push, with invariant checks as assertions
-- Done when: the e2e job is green on main in DUCTEI and required for merge
-- Unlocks: Tasks 2 and 3 become safe to build; regressions caught same day
+  four scenarios per push, with invariant checks as assertions — DONE,
+  DUCTEI@7433317, verified green on main:
+  https://github.com/xingxerx/DUCTEI/actions/runs/29975187862
+- Done when: the e2e job is green on main in DUCTEI (met) and required
+  for merge (NOT MET — branch protection needs an explicit owner
+  decision; an agent cannot flip repo-wide merge requirements
+  unilaterally). Owner: set required status checks [test, e2e-smoke] on
+  DUCTEI main at https://github.com/xingxerx/DUCTEI/settings/branches,
+  then flip this line to DONE.
+- Unlocks: Tasks 2 and 3 become safe to build; regressions caught same
+  day. Treating this as unblocked for GAP 2/3 build work below since the
+  check exists and is green — the only missing piece is enforcement.
 - Does not unlock: any new runtime capability
 
 ## Task 2: Spine flow (Qallow, VEYN pairs) — BLOCKED ON TASK 1

@@ -76,4 +76,6 @@ and reports instead of working around it.
 
 - No hardcoded credentials anywhere. Ever.
 - Package name is limen-compiler, never limen, in all docs and manifests.
+- No commiting, pushing, or merging without explicit user instruction.
+
 
