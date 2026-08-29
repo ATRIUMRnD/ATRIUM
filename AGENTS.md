@@ -16,9 +16,9 @@ routes QUBOs, and changes travel the way DUCTEI carries envelopes.
 |---|---|---|
 | Quantum routing, fidelity tiers, budget router, certificates, ledger (memory.py), reports (report.py), limend daemon | LIMEN | Python. Never call fidelity/budget routing "Lumen". |
 | Envelopes, relays, sessions, spool consumers, invariant enforcement (Rust), ductei-limen-relay | DUCTEI | Channel, not merger. |
-| Persistence, LMDB, sync wire format, C-level enforcement, ql_persist_merge_blob() | Qallow | sync_wire.c is the conformance oracle. |
-| Tracing, structured JSON logging, daemon/sensory-motor | VEYN | https://github.com/xingxerx/VEYN (private). Sensory-motor bus. Intero lives in this tree. |
-| Lucid-dreaming instrument, watch REM cue, haptic, cohort site | Øneiro | Private `xingxerx/oneiro` + `xingxerx/oneiro_website`. Commercial door. Not a mesh room. |
+| Persistence, LMDB, sync wire format, C-level enforcement, ql_persist_merge_blob() | Qallow | sync_wire.c is the conformance oracle. REM snapshot cue is GET /export on rem_detected (sleep_stage==3.0 legacy). |
+| Tracing, structured JSON logging, daemon/sensory-motor, OSC ingest | VEYN | https://github.com/xingxerx/VEYN (private). Sensory-motor bus. Intero lives in this tree. OSC 9000 owns /muse/* plus /oneiro/state and /oneiro/watch (rising-edge rem_detected). |
+| Lucid-dreaming instrument, watch REM cue, haptic, cohort site | Øneiro | Private `xingxerx/oneiro` + `xingxerx/oneiro_website`. Commercial door. Not a mesh room. Pushes /oneiro/state and /oneiro/watch to VEYN OSC 9000. |
 
 SYNOID and Grand_Cross are outside this map. Do not route mesh work into them.
 
