@@ -27,17 +27,16 @@ ROADMAP.md is the source of truth for status. This README is not.
 | Quantum routing, fidelity tiers, budget router, certificates, ledger, reports, limend | LIMEN | https://github.com/xingxerx/LIMEN |
 | Envelopes, relays, sessions, spool consumers, invariant enforcement | DUCTEI | https://github.com/xingxerx/DUCTEI |
 | Persistence, LMDB, sync wire format, C-level enforcement | Qallow | https://github.com/xingxerx/Qallow |
-| Tracing, structured JSON logging, daemon / sensory-motor | VEYN | missing (404 as of 2026-08-29). Snapshot: `CGX_WorkSpace/CGX_VEYN` |
+| Tracing, structured JSON logging, daemon / sensory-motor | VEYN | https://github.com/xingxerx/VEYN |
 | Lucid-dreaming instrument (application / commercial door) | Øneiro | https://github.com/xingxerx/oneiro (private). Site: https://oneiro-seven.vercel.app |
 
 LIMEN is Python. Never call fidelity or budget routing "Lumen". The
 package name is `limen-compiler`, never `limen`. DUCTEI is a channel,
 not a merger. Qallow `sync_wire.c` is the conformance oracle.
 
-VEYN is still a room in the architecture. The GitHub repo
-`xingxerx/VEYN` is 404. Do not open VEYN PRs until it is restored.
-Øneiro is the thing you sell. It is not a mesh room. SYNOID and
-Grand_Cross sit outside this map.
+VEYN is the sensory-motor room at https://github.com/xingxerx/VEYN
+(private). Øneiro is the thing you sell. It is not a mesh room. SYNOID
+and Grand_Cross sit outside this map.
 
 A change that cannot be classified into exactly one owning repo is split
 into per-repo changes before any work starts. Cross-repo landings follow
