@@ -28,29 +28,37 @@ Everything below grows that loop. Nothing starts over.
 - Unlocks: Tasks 2 and 3 are safe to build; regressions caught same day.
 - Does not unlock: any new runtime capability
 
-## Task 2: Spine flow (Qallow, VEYN pairs) — NETWORK TRANSPORT REMAINING (July 22, 2026)
+## Task 2: Spine flow — DONE (August 29, 2026)
 - Detail: harness-roadmap/02-spine-flow.md
 - Repos: DUCTEI, Qallow, then VEYN (rev-pin bump per landing)
-- Order inside the task: Qallow pair first (conformance oracle exists) —
-  DONE, DUCTEI@2cb9e68 + Qallow@0a546b3. VEYN pair second (producer of
-  trace events) — DONE, DUCTEI@5d750b8 + VEYN@1913f41. Network
-  transport last — NOT STARTED.
+- Order inside the task: Qallow pair first — DONE, DUCTEI@2cb9e68 +
+  Qallow@0a546b3. VEYN pair second — DONE, DUCTEI@5d750b8 + VEYN@1913f41.
+  Network transport last — DONE, DUCTEI@d951787 (July 24 2026): `net`
+  feature gate, local-first fallback, CI runs default/`net`/`pq`. Green:
+  https://github.com/xingxerx/DUCTEI/actions/runs/30066003124
 - Done when: three real consumers flow through DUCTEI under the five
-  invariants, each with its four smoke scenarios in CI — MET for all
-  three (LIMEN, Qallow, VEYN), all green on DUCTEI main:
-  https://github.com/xingxerx/DUCTEI/actions/runs/29976969294
-- Unlocks: DUCTEI becomes the actual spine (true in fact now, not just
-  design); precondition for Tasks 3 and 4
+  invariants, each with its four smoke scenarios in CI — MET (LIMEN,
+  Qallow, VEYN), and network transport is gated and tested — MET.
+- Unlocks: DUCTEI is the actual spine; Tasks 3 and 4 unblocked on this
+  axis
 - Does not unlock: self-modification; flow is still human-initiated
 
-## Task 3: Self-improvement loop — UNBLOCKED (Task 1 DONE August 29, 2026)
+## Task 3: Self-improvement loop — DONE (August 29, 2026)
 - Detail: harness-roadmap/03-self-improvement-loop.md
 - Repos: LIMEN (primary), DUCTEI
-- Scope guard: gates routing-policy changes ONLY at first
+- Scope guard: gates routing-policy changes ONLY at first (closed set:
+  currently CRITICALITY_SPREAD_THRESHOLD)
 - Loop: ledger baseline -> proposal with claim file -> CI verdict via
   report.py in plain English -> branch-protected merge -> ledger learns
+  — implemented LIMEN@13329733 (July 24 2026). Demonstration transcript:
+  policy_proposals/accepted/2026-07-24-raise-criticality-threshold.*
+  (threshold 2.0 -> 8.0, ACCEPTED, cost delta 0, physical-error exposure
+  delta -698.7). CI job `routing-policy proposal verdict` green:
+  https://github.com/xingxerx/LIMEN/actions/runs/30072093877
 - Done when: one real routing improvement has traversed the full loop and
-  the transcript is written up
+  the transcript is written up — MET. LIMEN `main` now requires
+  [cargo test, pytest (py3.12), routing-policy proposal verdict],
+  strict, no force-push, no deletions (August 29 2026).
 - Unlocks: the research result itself; every future improvement generates
   its own evidence trail
 - Does not unlock: gating arbitrary code; widening scope stays deliberate
