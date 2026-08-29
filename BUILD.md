@@ -68,29 +68,17 @@ Unlocks: certified quantum results land in durable LMDB state — the
 harness gains long-term memory outside LIMEN's own ledger. Second real
 consumer proves the pattern replicates.
 
-### GAP 3 — VEYN pair: adapter exists, daemon wiring does not
+### GAP 3 — DONE. VEYN pair (in-process bridge, not a separate relay)
 Repos: DUCTEI, VEYN
-- The ductei-veyn adapter converts VeynEvents but no process feeds it.
-  Missing: **ductei-veyn-relay** bin subscribing to VEYN's local daemon
-  (MCP :7700), applying CoalescePolicy, emitting scoped envelopes.
-  Local only, per standing decision.
-- VEYN side: expose a stable local event stream endpoint if :7700 does
-  not already provide one consumable without MCP handshake overhead
-  (check VEYN/harness/daemon.py for the test-harness pattern to reuse).
-- Direction of first traffic: VEYN as producer (trace/sensor events in),
-  with veyn.rem_event scoped for Qallow consumption (Øneiro path).
-- Witnessed on main 2026-08-29 (not a substitute for the relay): VEYN OSC
-  9000 ingests /oneiro/state and /oneiro/watch, rising-edge rem_detected;
-  Muse /muse/* unchanged. Example veyn.toml sets adapters.eeg = true;
-  compiled default stays eeg_enabled=false (UDP opt-in). DUCTEI maps any
-  kind containing the substring rem to veyn.rem_event. Qallow's
-  qallow-veyn-bridge treats rem_detected (value 1.0) as a snapshot cue
-  via GET http://localhost:5000/export (sleep_stage==3.0 remains legacy).
-- CI: VEYN's own harness/ already knows how to spawn the daemon; reuse it
-  to run a smoke scenario in DUCTEI CI or VEYN CI (pick DUCTEI, where the
-  other smokes live, cloning VEYN pinned by rev).
-Unlocks: third consumer; DUCTEI is then the spine in fact. Sensor->state
-path opens the Øneiro REM-trigger route without new plumbing.
+- Audit premise was stale. VEYN's dispatcher writes a DUCTEI channel
+  in-process (veyn-core/src/ductei_bridge.rs). There is no
+  ductei-veyn-relay binary; smoke_veyn.py reuses ductei-qallow-relay as
+  the second hop. Required CI job e2e-smoke-veyn is green on DUCTEI main.
+- OSC rem path on VEYN/Qallow main 2026-08-29: VEYN OSC 9000 ingests
+  /oneiro/state and /oneiro/watch, rising-edge rem_detected; Muse /muse/*
+  unchanged. Example veyn.toml sets adapters.eeg = true; compiled default
+  stays eeg_enabled=false. Qallow snapshots via GET /export on
+  rem_detected (value 1.0); sleep_stage==3.0 is legacy. See section 5.
 
 ### GAP 4 — Network transport (after 2 and 3)
 Repo: DUCTEI
@@ -124,7 +112,7 @@ Repos: LIMEN, DUCTEI, ATRIUM
 0. GAP 0 (minutes: verify green, flip protection, update ROADMAP.md)
 1. GAP 1 (one audit commit in VEYN)
 2. GAP 2 (the main build: ductei-qallow-relay + qallow_cli ingest + CI)
-3. GAP 3 (ductei-veyn-relay + VEYN endpoint + CI)
+3. GAP 3 (DONE: in-process DucteiBridge + smoke_veyn.py + e2e-smoke-veyn)
 4. GAP 5 can interleave anywhere (doc-only)
 5. GAP 6 after GAP 0, parallel to 2/3 if desired (different repos)
 6. GAP 4 last
