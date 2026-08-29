@@ -1,12 +1,11 @@
 # Task 3: Self-improvement loop
 
-Status: BLOCKED ON TASK 1
+Status: DONE (August 29, 2026)
 Repos: LIMEN (primary), DUCTEI
 
 ## Blocker
 
-Task 1's CI harness must be green and required on main in DUCTEI first.
-An agent proposing work here must show that's true before starting.
+Resolved. Task 1 is DONE.
 
 ## Scope guard
 
@@ -47,8 +46,24 @@ realms."
 - Gating arbitrary code. Widening scope beyond routing-policy changes
   stays a deliberate, separately proposed decision.
 
+## Progress (July 24 / August 29, 2026)
+
+- Implemented LIMEN@13329733. Claim files live under
+  `policy_proposals/pending/` and archive to `accepted/` or `failed/`.
+  Schema is a Proposal claiming a named tunable (currently only
+  `CRITICALITY_SPREAD_THRESHOLD`), plus what it changes / unlocks /
+  does not unlock.
+- One real routing improvement: raise CRITICALITY_SPREAD_THRESHOLD
+  2.0 -> 8.0. Transcript:
+  `policy_proposals/accepted/2026-07-24-raise-criticality-threshold.*`
+  Verdict ACCEPTED (cost delta 0, physical-error exposure delta -698.7).
+- CI job `routing-policy proposal verdict` green:
+  https://github.com/xingxerx/LIMEN/actions/runs/30072093877
+- LIMEN `main` branch protection now requires that verdict (plus
+  `cargo test` and `pytest (py3.12)`), August 29 2026.
+
 ## Open questions
 
-- [SLOT — where claim files live and their exact schema]
-- [SLOT — what "one real routing improvement" means concretely: a
-  specific budget-router parameter, a fidelity-tier threshold, etc.]
+- Claim-file location and schema: resolved as above.
+- "One real routing improvement": resolved as
+  CRITICALITY_SPREAD_THRESHOLD 2.0 -> 8.0.

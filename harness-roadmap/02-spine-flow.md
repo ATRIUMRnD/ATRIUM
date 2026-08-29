@@ -1,12 +1,11 @@
 # Task 2: Spine flow (Qallow, VEYN pairs)
 
-Status: BLOCKED ON TASK 1
+Status: DONE (August 29, 2026)
 Repos: DUCTEI, Qallow, then VEYN (rev-pin bump per landing)
 
 ## Blocker
 
-Task 1's CI harness must be green and required on main in DUCTEI first.
-An agent proposing work here must show that's true before starting.
+Resolved. Task 1 is DONE: e2e jobs green and required on DUCTEI main.
 
 ## Goal
 
@@ -74,10 +73,19 @@ repo (e.g. veyn-core/Cargo.toml for VEYN).
   adapters, and surfacing cargo's stderr on build failure so the first
   of those wasn't a silent exit 101).
 - **All three pairs done: DUCTEI is a spine in fact, not just in
-  design.** Network transport is the only remaining item below.
+  design.**
+- **Network transport: DONE.** DUCTEI@d951787 (July 24 2026) gates the
+  existing TCP transport behind a `net` feature (implied by grpc/quic)
+  so a default build has zero network code. `transport::send_local_first()`
+  tries the network, then falls back to the local persistence-before-ack
+  Channel only on unreachability. CI runs the workspace suite with
+  default features, `net`, and `pq`. Green:
+  https://github.com/xingxerx/DUCTEI/actions/runs/30066003124
 
 ## Open questions
 
-- [SLOT — transport choice for the "network transport last" step]
+- Transport choice for the network step: resolved as the existing
+  ductei-core TCP path, feature-gated (`net`), ML-KEM-768 still under
+  `pq`. Not a new protocol.
 - [SLOT — how VEYN's ductei_bridge (veyn-core/src/ductei_bridge.rs) maps
   onto this task's done-criteria smoke scenarios]
