@@ -63,7 +63,7 @@ Everything below grows that loop. Nothing starts over.
   its own evidence trail
 - Does not unlock: gating arbitrary code; widening scope stays deliberate
 
-## Task 4: Qallow kernel-level invariants - ACTIVE (August 29, 2026)
+## Task 4: Qallow kernel-level invariants - DONE (August 29, 2026)
 - Detail: harness-roadmap/04-qallow-kernel-invariants.md
 - Repo: Qallow (primary)
 - Proposal (before Qallow code): what changes is C-level enforcement in
@@ -71,13 +71,18 @@ Everything below grows that loop. Nothing starts over.
   aarch64 target, sovereignty audit). ATRIUM only witnesses. Unlocks
   unbypassable invariants and on-device state. Does not unlock new
   capabilities.
-- Audited live on Qallow main: ql_persist_merge_blob() already does
-  arg/size checks, LWW merge, tombstones. It does not yet enforce
-  bounded sessions in the record layout, deny-by-default scopes, or
-  credential-non-representability. test_sync_wire.c and
-  test_persist_lmdb.c exist. Makefile has no aarch64 target.
+- Landed Qallow@2b0009e (PR 14). ql_persist_merge_blob() rejects
+  schema < 2, reserved key prefixes (env/ cred/ secret/ token/
+  password/), open scope 0, zero session id, zero session bound, and
+  malformed v2 payloads, before LMDB write. Record layout stores
+  session_id and session_bound. test_sync_wire.c and test_persist_lmdb.c
+  fail on those violations. Makefile test-aarch64 cross-compiles.
+  SOVEREIGNTY.md: sync_wire none; persist vendored LMDB only. CI job
+  `C persist/sync tests` green:
+  https://github.com/xingxerx/Qallow/actions/runs/33280770814
 - Done when: each invariant has a C-level test that fails on violation,
   and the sovereignty audit answers "none" for core-loop dependencies
+  - MET.
 - Unlocks: invariants become un-bypassable from above; harness state
   travels on-device
 - Does not unlock: new capabilities; never preempts Tasks 1-3 (those
