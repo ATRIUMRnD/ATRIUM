@@ -78,7 +78,14 @@ Repos: DUCTEI, VEYN
   not already provide one consumable without MCP handshake overhead
   (check VEYN/harness/daemon.py for the test-harness pattern to reuse).
 - Direction of first traffic: VEYN as producer (trace/sensor events in),
-  with veyn.rem_event scoped for Qallow consumption later (Øneiro path).
+  with veyn.rem_event scoped for Qallow consumption (Øneiro path).
+- Witnessed on main 2026-08-29 (not a substitute for the relay): VEYN OSC
+  9000 ingests /oneiro/state and /oneiro/watch, rising-edge rem_detected;
+  Muse /muse/* unchanged. Example veyn.toml sets adapters.eeg = true;
+  compiled default stays eeg_enabled=false (UDP opt-in). DUCTEI maps any
+  kind containing the substring rem to veyn.rem_event. Qallow's
+  qallow-veyn-bridge treats rem_detected (value 1.0) as a snapshot cue
+  via GET http://localhost:5000/export (sleep_stage==3.0 remains legacy).
 - CI: VEYN's own harness/ already knows how to spawn the daemon; reuse it
   to run a smoke scenario in DUCTEI CI or VEYN CI (pick DUCTEI, where the
   other smokes live, cloning VEYN pinned by rev).
