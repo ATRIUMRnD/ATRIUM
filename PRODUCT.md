@@ -1,34 +1,35 @@
 # Product surface
 
-VEYN is the commercial room. ATRIUM does not sell.
+The thing you sell is **Øneiro**: a lucid-dreaming instrument (EEG or
+watch REM detect, haptic cue, journal). The hosted front door is
+https://oneiro-seven.vercel.app. ATRIUM does not sell.
 
 ## What is for sale
 
-- **VEYN** is the local sensor data bus (daemon on `:7700`). Source is
-  public under Elastic License 2.0: others may use and modify it, they
-  may not offer it as a hosted service, and they may not strip license
-  keys or notices.
-- **Intero** (in the VEYN tree) is the first-party app on that bus:
-  intent, biometric memory, MCP, desktop app. That is the product a
-  customer runs.
-- LIMEN stays a library (`limen-compiler`). DUCTEI and Qallow stay
-  plumbing. ATRIUM stays the constitution.
+- **Øneiro** is the product. Private repo `xingxerx/oneiro` (engine,
+  watch, haptic firmware) plus `xingxerx/oneiro_website` (the Vercel
+  site). Cohort 03 waitlist is the current offer: wristband, listener,
+  three nights of calibration, NDA.
+- The waitlist CTA (`knock`) currently opens a mailto to
+  `oneiro.orieno@gmail.com`. There is no server-side list and no
+  payment. The "247 sleepers" line is copy, not a count.
+- **VEYN** is the local sensor bus Øneiro can ride (ELv2). Intero is
+  the first-party app on that bus. Keep them as infrastructure unless
+  a customer is buying a daemon.
+- LIMEN stays a library. DUCTEI and Qallow stay plumbing. ATRIUM stays
+  the constitution.
 
 ## Live state (August 29 2026)
 
-- License file is ELv2, copyright XINGXERX / ATRIUM.
-- GitHub description previously said "open-source". That was wrong for
-  ELv2. Corrected on the VEYN repo to source-available / Intero.
-- Security PR https://github.com/xingxerx/VEYN/pull/77 merged with all
-  CI jobs green (format, three OS builds, Intero macOS, harness).
-- No GitHub Releases yet. Main had been red on Format + Clippy before
-  that PR.
-- ELv2 talks about license-key functionality. Confirm whether Intero
-  actually has a key check before charging anyone. If it does not,
-  adding one is VEYN-owned application code, not ATRIUM.
+- Site is up: https://oneiro-seven.vercel.app
+- Knock: mailto form, not a database.
+- VEYN security PR 77 merged. VEYN GitHub blurb corrected to ELv2.
+- Next charge step on this path: keep the mailto until you want a
+  real list or a Stripe deposit. That work belongs in
+  `oneiro_website`, not ATRIUM.
 
 ## Routing
 
-Work that is "make money with the bus" goes to VEYN (Intero). Work that
-is "quantum routing as a library" goes to LIMEN. Do not open commercial
-copy in ATRIUM, DUCTEI, or Qallow.
+Work that is "sell the lucid-dreaming cohort / site / wristband" goes
+to `oneiro` and `oneiro_website`. Work that is "sensor bus / Intero"
+goes to VEYN. Do not open commercial copy in DUCTEI, LIMEN, or Qallow.
