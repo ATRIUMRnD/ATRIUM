@@ -8,8 +8,9 @@ DUCTEI @ 7433317, LIMEN @ fd3f505, VEYN main, Qallow main, ATRIUM master.
 GAPs 0, 1, 2, 3, 5 built and verified — see section 5 below for what
 actually happened, including two things this audit didn't predict
 (VEYN's bridge was already daemon-wired; VEYN's CI build needed system
-packages the audit didn't flag). GAP 4 (network transport) and GAP 6
-(self-improvement loop) remain, per the original build order.
+packages the audit didn't flag). GAP 4 (network transport) landed
+DUCTEI@d951787 (July 24). GAP 6 (self-improvement loop) landed
+LIMEN@13329733 (July 24). Witnessed in ROADMAP.md August 29 2026.
 
 ## 1. What exists and is connected (verified in source)
 
@@ -168,9 +169,15 @@ in the audit.
   no force-push, no deletions. LIMEN's CODE_OF_CONDUCT.md candidacy
   noted but not actioned (a future decision, not a build step this
   pass).
-- **GAP 4, GAP 6**: not started, per the original build order (GAP 4
-  explicitly waits on two local pairs in CI, now satisfied; GAP 6 is a
-  separate LIMEN-primary effort).
+- **GAP 4**: DONE. DUCTEI@d951787 gates TCP transport behind `net`,
+  local-first fallback on unreachability, CI covers default/`net`/`pq`.
+  Green: https://github.com/xingxerx/DUCTEI/actions/runs/30066003124
+- **GAP 6**: DONE. LIMEN@13329733 ledger-backed routing-policy proposal
+  gate, demonstration transcript
+  `2026-07-24-raise-criticality-threshold` ACCEPTED, CI job
+  `routing-policy proposal verdict` green
+  (https://github.com/xingxerx/LIMEN/actions/runs/30072093877). LIMEN
+  `main` requires that verdict as of August 29 2026.
 
 Every commit above is pushed to each repo's real `main`/`master` and
 independently green on GitHub Actions — nothing here is a local-only or
