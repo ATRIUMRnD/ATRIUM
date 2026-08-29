@@ -15,10 +15,9 @@ https://oneiro-seven.vercel.app. ATRIUM does not sell.
   payment. The "247 sleepers" line is copy, not a count.
 - Live sensor path (July 2026): Apple Watch HR + atonia. Muse / EEG-over-OSC
   is dormant in the tree, not the live trigger.
-- **VEYN** is the local sensor bus Øneiro can ride. GitHub `xingxerx/VEYN`
-  is 404 as of 2026-08-29 (it answered in the morning; PR 77 had merged).
-  Snapshot: `CGX_WorkSpace/CGX_VEYN`. Intero is the first-party app on
-  that bus, when the bus repo is restored.
+- **VEYN** is the local sensor bus Øneiro can ride, at
+  https://github.com/xingxerx/VEYN (private). Intero is the first-party
+  app in that tree.
 - LIMEN stays a library. DUCTEI and Qallow stay plumbing. ATRIUM stays
   the constitution.
 
@@ -33,5 +32,4 @@ https://oneiro-seven.vercel.app. ATRIUM does not sell.
 
 Work that is "sell the lucid-dreaming cohort / site / wristband" goes
 to `oneiro` and `oneiro_website`. Work that is "sensor bus / Intero"
-goes to VEYN after that repo is restored. Do not open commercial copy
-in DUCTEI, LIMEN, or Qallow.
+goes to VEYN. Do not open commercial copy in DUCTEI, LIMEN, or Qallow.
