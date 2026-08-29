@@ -134,13 +134,10 @@ in the audit.
 ## 5. What actually happened
 
 - **GAP 0**: e2e-smoke confirmed green on DUCTEI main
-  (run 29975187862). Branch protection (required status checks on
-  DUCTEI main) is BLOCKED — repo-settings changes need explicit owner
-  action, an agent can't flip them unilaterally. ROADMAP.md Task 1
-  flipped to "GREEN, PROTECTION PENDING" with the owner action spelled
-  out. Everything downstream proceeded treating the check as
-  functionally live (it runs and is green; it just isn't yet
-  merge-blocking).
+  (run 29975187862). Branch protection on DUCTEI `main` is now LIVE
+  (August 29 2026): required checks test, e2e-smoke, e2e-smoke-qallow,
+  e2e-smoke-veyn; strict; no force-push; no deletions. ROADMAP.md
+  Task 1 flipped to DONE.
 - **GAP 1**: VEYN's DUCTEI rev pin bumped dcd4657 -> 7433317
   (VEYN@da747ec). 71/71 tests passed against the new rev.
 - **GAP 2**: built exactly as scoped — ductei-qallow-relay
@@ -166,12 +163,11 @@ in the audit.
   cargo's stderr on build failure (the first fix attempt failed silently
   without it). Green in CI: run 29976969294.
 - **GAP 5**: all four repos (DUCTEI, LIMEN, Qallow, VEYN) now link their
-  README to ATRIUM as the governance/constitution repo. ATRIUM's own
-  branch protection is BLOCKED for the same reason as GAP 0's — repo
-  settings need explicit owner action via
-  https://github.com/xingxerx/ATRIUM/settings/branches. LIMEN's
-  CODE_OF_CONDUCT.md candidacy noted but not actioned (a future
-  decision, not a build step this pass).
+  README to ATRIUM as the governance/constitution repo. ATRIUM `master`
+  branch protection is now LIVE (August 29 2026): pull-request reviews,
+  no force-push, no deletions. LIMEN's CODE_OF_CONDUCT.md candidacy
+  noted but not actioned (a future decision, not a build step this
+  pass).
 - **GAP 4, GAP 6**: not started, per the original build order (GAP 4
   explicitly waits on two local pairs in CI, now satisfied; GAP 6 is a
   separate LIMEN-primary effort).
