@@ -17,7 +17,7 @@ routes QUBOs, and changes travel the way DUCTEI carries envelopes.
 | Quantum routing, fidelity tiers, budget router, certificates, ledger (memory.py), reports (report.py), limend daemon | LIMEN | Python. Never call fidelity/budget routing "Lumen". |
 | Envelopes, relays, sessions, spool consumers, invariant enforcement (Rust), ductei-limen-relay | DUCTEI | Channel, not merger. |
 | Persistence, LMDB, sync wire format, C-level enforcement, ql_persist_merge_blob() | Qallow | sync_wire.c is the conformance oracle. |
-| Tracing, structured JSON logging, daemon/sensory-motor | VEYN | Room still exists. GitHub `xingxerx/VEYN` is 404 as of 2026-08-29. Snapshot: `CGX_WorkSpace/CGX_VEYN`. Do not merge VEYN work until restored. |
+| Tracing, structured JSON logging, daemon/sensory-motor | VEYN | https://github.com/xingxerx/VEYN (private). Sensory-motor bus. Intero lives in this tree. |
 | Lucid-dreaming instrument, watch REM cue, haptic, cohort site | Øneiro | Private `xingxerx/oneiro` + `xingxerx/oneiro_website`. Commercial door. Not a mesh room. |
 
 SYNOID and Grand_Cross are outside this map. Do not route mesh work into them.
