@@ -18,6 +18,10 @@ https://oneiro-seven.vercel.app. ATRIUM does not sell.
 - **VEYN** is the local sensor bus Øneiro can ride, at
   https://github.com/xingxerx/VEYN (private). Intero is the first-party
   app in that tree.
+- Platform REM path (on main, 2026-08-29): Øneiro pushes /oneiro/state and
+  /oneiro/watch to VEYN OSC 9000. VEYN emits rising-edge rem_detected.
+  Example config sets adapters.eeg = true; compiled default stays off.
+  Qallow snapshots via GET /export on rem_detected (value 1.0).
 - LIMEN stays a library. DUCTEI and Qallow stay plumbing. ATRIUM stays
   the constitution.
 
