@@ -1,6 +1,6 @@
 # Task 1: CI harness
 
-Status: ACTIVE
+Status: DONE (August 29, 2026)
 Repos: DUCTEI (primary), LIMEN (pinned rev, simulator path)
 
 ## Goal
