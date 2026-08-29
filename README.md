@@ -16,7 +16,7 @@ classify the change, send it to the owning repo, and respect the gates.
 | [ROADMAP.md](ROADMAP.md) | Dispatch table: what is next, what is blocked, what is done |
 | [BUILD.md](BUILD.md) | Connection audit and gap history |
 | [harness-roadmap/](harness-roadmap/00-INDEX.md) | How each ROADMAP task is built |
-| [PRODUCT.md](PRODUCT.md) | Commercial surface: VEYN / Intero |
+| [PRODUCT.md](PRODUCT.md) | Commercial surface: Øneiro |
 
 ROADMAP.md is the source of truth for status. This README is not.
 
@@ -27,12 +27,17 @@ ROADMAP.md is the source of truth for status. This README is not.
 | Quantum routing, fidelity tiers, budget router, certificates, ledger, reports, limend | LIMEN | https://github.com/xingxerx/LIMEN |
 | Envelopes, relays, sessions, spool consumers, invariant enforcement | DUCTEI | https://github.com/xingxerx/DUCTEI |
 | Persistence, LMDB, sync wire format, C-level enforcement | Qallow | https://github.com/xingxerx/Qallow |
-| Tracing, structured JSON logging, daemon / sensory-motor | VEYN | https://github.com/xingxerx/VEYN |
+| Tracing, structured JSON logging, daemon / sensory-motor | VEYN | missing (404 as of 2026-08-29). Snapshot: `CGX_WorkSpace/CGX_VEYN` |
+| Lucid-dreaming instrument (application / commercial door) | Øneiro | https://github.com/xingxerx/oneiro (private). Site: https://oneiro-seven.vercel.app |
 
 LIMEN is Python. Never call fidelity or budget routing "Lumen". The
 package name is `limen-compiler`, never `limen`. DUCTEI is a channel,
-not a merger. Qallow `sync_wire.c` is the conformance oracle. VEYN is
-the most mature repo; its patterns are the reference for the others.
+not a merger. Qallow `sync_wire.c` is the conformance oracle.
+
+VEYN is still a room in the architecture. The GitHub repo
+`xingxerx/VEYN` is 404. Do not open VEYN PRs until it is restored.
+Øneiro is the thing you sell. It is not a mesh room. SYNOID and
+Grand_Cross sit outside this map.
 
 A change that cannot be classified into exactly one owning repo is split
 into per-repo changes before any work starts. Cross-repo landings follow
