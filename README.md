@@ -16,6 +16,7 @@ classify the change, send it to the owning repo, and respect the gates.
 | [ROADMAP.md](ROADMAP.md) | Dispatch table: what is next, what is blocked, what is done |
 | [BUILD.md](BUILD.md) | Connection audit and gap history |
 | [harness-roadmap/](harness-roadmap/00-INDEX.md) | How each ROADMAP task is built |
+| [PRODUCT.md](PRODUCT.md) | Commercial surface: VEYN / Intero |
 
 ROADMAP.md is the source of truth for status. This README is not.
 
