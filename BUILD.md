@@ -177,3 +177,21 @@ in the audit.
 Every commit above is pushed to each repo's real `main`/`master` and
 independently green on GitHub Actions — nothing here is a local-only or
 simulated result.
+
+## 6. One-app pass (September 8 2026, on-box, uncommitted)
+
+- **GAP 7 - spine broken against Qallow main.** Not predicted by any
+  audit: Task 4's kernel gate rejects DUCTEI's schema-1 frames, and
+  DUCTEI CI hid it behind a pre-Task-4 Qallow pin. Fixed in DUCTEI
+  (`ductei_qallow::persist`, relay re-framing, pins -> a05392e). Both
+  existing pair smokes green again against Qallow main.
+- **GAP 8 - no mind-to-hands arrow.** Every pair flowed *into* Qallow;
+  nothing flowed out of Qallow's state into LIMEN. Added `qallow propose`
+  (Qallow) so a persisted REM cue becomes an offline LIMEN job.
+- **The loop, proven.** DUCTEI scripts/smoke_loop.py (41 checks) and
+  scripts/atrium_up.py (one-command launcher; verified live with the
+  real VEYN daemon and an OSC /oneiro/watch cue). Details and landing
+  order: harness-roadmap/07.
+- Also seen on-box: relay and daemon binaries built earlier in the day
+  failed every filesystem write with "Access is denied" until rebuilt
+  from clean. Not a code defect; noted so nobody chases it twice.

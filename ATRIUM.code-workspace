@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{ "name": "ATRIUM (constitution)", "path": "." },
+		{ "name": "DUCTEI (channel)", "path": "DUCTEI" },
+		{ "name": "LIMEN (compute)", "path": "LIMEN" },
+		{ "name": "Qallow (state)", "path": "Qallow" },
+		{ "name": "VEYN (senses)", "path": "VEYN" }
+	],
+	"settings": {
+		"files.exclude": {
+			"**/target": true,
+			"**/__pycache__": true,
+			"**/.pytest_cache": true
+		},
+		"search.exclude": {
+			"**/target": true,
+			"**/.venv": true
+		}
+	}
+}
