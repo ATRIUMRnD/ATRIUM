@@ -1,6 +1,6 @@
 # Task 4: Qallow kernel-level invariants
 
-Status: DONE (August 29, 2026) - landed Qallow@2b0009e (PR 14)
+Status: ACTIVE (August 29, 2026)
 Repo: Qallow (primary)
 
 ## Proposal (AGENTS.md section 5)
