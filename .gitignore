@@ -6,11 +6,3 @@
 /Qallow/
 /VEYN/
 /dayroom0/
-
-# Local scratch for smoke runs (DUCTEI scripts accept --workdir target/tmp)
-/target/
-
-# Editor / OS
-.DS_Store
-Thumbs.db
-desktop.ini
