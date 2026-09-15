@@ -1,10 +1,25 @@
 {
 	"folders": [
-		{ "name": "ATRIUM (constitution)", "path": "." },
-		{ "name": "DUCTEI (channel)", "path": "DUCTEI" },
-		{ "name": "LIMEN (compute)", "path": "LIMEN" },
-		{ "name": "Qallow (state)", "path": "Qallow" },
-		{ "name": "VEYN (senses)", "path": "VEYN" }
+		{
+			"name": "ATRIUM (constitution)",
+			"path": "."
+		},
+		{
+			"name": "DUCTEI",
+			"path": "../DUCTEI"
+		},
+		{
+			"name": "LIMEN",
+			"path": "../LIMEN"
+		},
+		{
+			"name": "QALLOW",
+			"path": "../QALLOW"
+		},
+		{
+			"name": "VEYN",
+			"path": "../VEYN"
+		}
 	],
 	"settings": {
 		"files.exclude": {
