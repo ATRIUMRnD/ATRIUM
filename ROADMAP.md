@@ -84,6 +84,23 @@ and the loop now exercises it nightly. Verified on the RTX 5080.
 - Does not unlock: quantum speedup for LLM work, qubit counts above 30,
   or revenue by itself. It is harness plumbing that makes the loop free
   to run every night.
+- Oct 26, 2026, what tier 0 is for, measured (limen/study/, uncommitted in
+  D:\LIMEN; `python -m limen.study <gap|cut|bench|verify|all>`):
+  gap: ideal-vs-hardware on the final QAOA circuit; success_probability
+  collapses like 2**-n (0.0005 at 20 qubits) so the record now carries
+  distribution fidelity / TVD (exact up to 18 qubits) and expected-energy
+  gap (valid at any width). cut: 16 vars into 8q pieces took 57 min of
+  reconstruction vs 8 s exact, mean marginal error 0.031, 15/16 signs
+  right; cost is n * 4**cuts classical post-processing, not the GPU, so
+  tier-0 cutting is a correctness oracle, not a throughput path. bench on
+  aer_gpu: TSP 3 cities ratio 1.0 (1.4 s); 4 and 5 cities decode to
+  infeasible tours (p=1 QAOA + argmax, the 0.15% feasible-rate weakness
+  from June); Max-Cut 3-regular 12/20/28 nodes ratio 0.93 / 0.83 / 0.37
+  (28-node ratio is against a local-search lower bound, labelled). verify:
+  Tier 2 (d=5 ECC) at 20 vars reproduces the ideal solution exactly;
+  predicted logical error bound 5.8e-6. Takeaway: tier 0 is doing its job
+  as ground truth; the weak link it exposes is p=1 QAOA with argmax
+  decoding, which is where the next LIMEN work should go.
 
 ## Task 1: CI harness  - DONE (August 29, 2026)
 - Detail: harness-roadmap/01-ci-harness.md
