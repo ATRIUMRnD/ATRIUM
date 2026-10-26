@@ -6,3 +6,14 @@
 /Qallow/
 /VEYN/
 /dayroom0/
+
+# Test & runtime node bloat (must never enter ATRIUM tree)
+/target/
+/ductei-anchor-node/
+*.patch
+*.log
+*.mdb
+*.db
+*.db-shm
+*.db-wal
+video-watch-gate-fingerprint.txt
