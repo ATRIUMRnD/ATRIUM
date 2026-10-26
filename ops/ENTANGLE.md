@@ -30,12 +30,25 @@ and would sync files without hashes, so it is not used.
 
 ## Use
 
+Defaults are the real layout: peer `xing-pc`, user `xing`, root `D:/ATRIUM`.
+Git is pinned to the Windows OpenSSH client (the one that holds the key);
+Git for Windows' bundled ssh does not see it and fails with "Permission
+denied (publickey)".
+
 ```powershell
-.\ops\entangle.ps1 -PeerUser <pc-user>          # verify only
-.\ops\entangle.ps1 -PeerUser <pc-user> -Fill    # clone rooms the PC lacks
-.\ops\entangle.ps1 -PeerUser <pc-user> -Push    # fast-forward PC to laptop
-.\ops\entangle.ps1 -PeerUser <pc-user> -Pull    # fast-forward laptop to PC
+.\ops\entangle.ps1          # verify only
+.\ops\entangle.ps1 -Fill    # clone rooms the PC lacks
+.\ops\entangle.ps1 -Push    # fast-forward PC to laptop
+.\ops\entangle.ps1 -Pull    # fast-forward laptop to PC
 ```
+
+The PC repos carry `receive.denyCurrentBranch = updateInstead`, so a
+fast-forward push into the branch the PC has checked out updates its
+working tree too (refused if that tree is dirty, nothing is overwritten).
+
+Layout rule both machines follow: `master`/`main` in every room stays
+equal to `origin`; work in progress lives on named branches, and both
+machines check out the same branch per room.
 
 Exit 0 means ENTANGLED. Exit 1 means at least one room DIVERGED and needs
 a human; the witness file names the room and both hashes. Exit 2 means the

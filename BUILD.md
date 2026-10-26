@@ -12,6 +12,29 @@ packages the audit didn't flag). GAP 4 (network transport) landed
 DUCTEI@d951787 (July 24). GAP 6 (self-improvement loop) landed
 LIMEN@13329733 (July 24). Witnessed in ROADMAP.md August 29 2026.
 
+## Status update (October 24 2026)
+
+Checked on xing-pc against repo history (all three at origin/main, no
+unpushed commits): DUCTEI d951787, LIMEN 1332973, Qallow 218fb76.
+
+- GAP 4 (network transport): STARTED. DUCTEI@d951787 gates the transport
+  behind the `net` feature and adds send_local_first(), so offline
+  degrades to the local Channel by construction. Restart replay,
+  malformed-frame rejection, and local-first degrade are tested. CI runs
+  default, `net`, and `pq`. No multi-node deployment yet.
+- GAP 6 (self-improvement loop): BUILT in LIMEN@1332973, scoped to the
+  CRITICALITY_SPREAD_THRESHOLD tunable. One demonstration proposal is
+  archived. The policy-proposal-verdict job exits non-zero on rejection;
+  it is a required check on LIMEN main (confirmed October 24 2026). Extending the gate to
+  ATRIUM's own AGENTS.md / ROADMAP.md is not done.
+- GAP 0 and GAP 5 branch protection: DONE, confirmed by the owner October
+  24 2026 (DUCTEI main, LIMEN main, ATRIUM master; see ROADMAP.md).
+- LIMEN working tree has uncommitted edits (budget_router, certificate,
+  pipeline, report, CHANGELOG, tests, plus a new tests/test_ecc_term.py).
+  Not touched by this doc update.
+- VEYN (D:\VEYN) history now starts at 69f7c5d (2026-08-29), so older
+  VEYN commit refs in section 5 are historical only.
+
 ## 1. What exists and is connected (verified in source)
 
 | Connection | State | Evidence |
@@ -195,3 +218,121 @@ simulated result.
 - Also seen on-box: relay and daemon binaries built earlier in the day
   failed every filesystem write with "Access is denied" until rebuilt
   from clean. Not a code defect; noted so nobody chases it twice.
+
+## 7. GAP 4 network smoke, October 24 2026 (xing-pc leg only)
+
+Test binary: ductei-core/src/bin/ductei-net-smoke.rs (feature `net`,
+working folder only, not committed, not yet through a pull request).
+Run: `ductei-net-smoke scenarios 100.106.147.75:7710` on xing-pc.
+
+- Result: 14 of 14 checks passed across five scenarios: good session,
+  scope denial plus stale rejection, restart replay (listener process
+  killed and restarted over the same log), malformed frame (listener
+  survived, log untouched), and unreachable peer (degraded to the local
+  channel).
+- Honest scope: both nodes ran on xing-pc, as separate processes, over the
+  Tailscale address 100.106.147.75. Traffic to a machine's own Tailscale
+  address does not cross the physical network, so this is not yet a
+  two-machine result. The xing-laptop leg (listener on xing-pc, sender on
+  xing-laptop) is pending.
+- Not covered: transport security (the wire has no encryption or
+  authentication of its own; the tailnet provides both) and the `pq` key
+  exchange.
+
+- xing-laptop leg, partial (October 24 2026): sender on xing-laptop
+  (100.121.3.55), listener on xing-pc (100.106.147.75:7710). Good envelope
+  delivered over the network and persisted on xing-pc (listener log shows
+  the connection from 100.121.3.55; remote log holds key laptop-a,
+  lamport 10). Out-of-scope envelope denied by the peer and not written.
+  Not yet run from the laptop: stale rejection, restart replay, unreachable
+  peer fallback.
+
+- xing-laptop leg, complete (October 24 2026): sender on xing-laptop,
+  listener on xing-pc over the tailnet. Good envelope delivered and
+  persisted. Out-of-scope envelope denied. Replayed envelope denied as
+  stale. Listener killed: sender degraded to its local channel
+  (LocalFallback) and the remote log was unchanged. Listener restarted over
+  the same log: new envelope accepted, old envelope still denied as stale
+  (gate rebuilt from the log), remote log holds laptop-a, laptop-c,
+  laptop-e with nothing lost or duplicated.
+- Observation: when the peer is unreachable and the envelope is already in
+  the local spool, send_local_first returns the local Channel's
+  StaleDelta error instead of LocalFallback. Correct for idempotence, but a
+  retrying caller must treat StaleDelta from the local channel as "already
+  spooled", not as a failure.
+- Still not covered: transport security (the wire has no encryption or
+  authentication of its own; the tailnet provides both) and the pq key
+  exchange.
+
+## 8. Heartbeat loop run, October 24 2026 (xing-pc and xing-laptop)
+
+Binary: ductei-core/src/bin/ductei-node.rs (feature `net`, std only, working
+folder only, not committed). Nodes: pc (100.106.147.75:7720) and laptop
+(100.121.3.55:7720) over the tailnet, each under its own `supervise`
+process. Timings were SCALED for the test: beat 2 s, SUSPECT after 6 s,
+UNREACHABLE after 20 s (production plan: 30 s, 90 s, 300 s).
+
+- S1 steady state: PASS, but only about 25 seconds, not the 10 minutes in the
+  plan. Both nodes HEALTHY, counters advancing in both directions.
+- S2 kill the laptop node process: PASS as healing, not as detection. The
+  supervisor restarted it in about 1 s (counter resumed 19 -> 20), faster than
+  the 6 s SUSPECT threshold, so the pc never noticed. That is the intended
+  outcome of self-healing.
+- S2b whole laptop node stopped (node and supervisor): PASS. pc reported
+  SUSPECT at 7 s, UNREACHABLE at 21 s, and HEALTHY again at counter 34 after
+  the laptop was started, resuming above its last counter (33).
+- S3 crash storm: PASS. Four kills: three restarts, then the supervisor
+  stopped and wrote a plain-English record to laptop\failed\ (nothing
+  deleted, no retry).
+- S4 partition: PASS, one-way. Instead of stopping Tailscale (which would cut
+  the SSH route), a temporary outbound firewall rule on the laptop blocked
+  connections to pc:7720. Laptop heartbeats were spooled locally, pc reported
+  UNREACHABLE, the laptop still saw the pc as HEALTHY, and on removal pc
+  reported HEALTHY again at counter 73. The 15 spooled heartbeats (58 to 72)
+  were not forwarded, by design.
+- S5 out-of-scope and malformed frames sent at the pc node: PASS. Scope
+  denied (ack 0), malformed frame dropped with a witness line, same node
+  process, inbox holds heartbeats only, laptop still HEALTHY.
+- Cleanup verified: no ductei-node processes on either machine, no listeners
+  on 7710 or 7720, temporary firewall rules removed (sshd-tailnet kept).
+
+Findings to fix:
+- No connect timeout in the transport. When the peer did not answer, the pc
+  beat loop produced no "not reachable" line for about 20 seconds, so I
+  infer connect() blocked. With three or more nodes one dead peer would
+  delay beats to live peers and cause false SUSPECT. Candidate fix: use
+  TcpStream::connect_timeout in TcpClient::connect (ductei-core transport).
+- The 3-restarts-per-hour count lives in the supervisor's memory. If the
+  supervisor itself is restarted the count resets. Persist restart times to
+  disk before installing it as a scheduled task.
+- Spooled heartbeats are never trimmed. Small (15 lines after the partition)
+  but unbounded.
+- Not done: watchdog scheduled tasks on either machine (owner decision:
+  per-user or SYSTEM), a 10 minute steady-state run at production timings,
+  the status page change, and the pull request.
+
+Fix applied, October 25 2026 (connect timeout): ductei-core transport.rs now
+connects with a 2 s bound (TcpClient::connect_timeout, CONNECT_TIMEOUT) and
+bounds the ack wait at 5 s (ACK_TIMEOUT). New test
+transport_connect_is_bounded_when_peer_does_not_answer. Measured on xing-pc
+sending to the laptop port while nothing answered: old build 66.4 s before
+falling back, new build 2.2 s, same LocalFallback result. Suites pass with
+default features (15) and with net (21). Working folder only, not
+committed. Side effect to know: if the ack times out after the peer already
+persisted the envelope, the sender also spools it locally (at-least-once, a
+possible duplicate). The ductei-node.exe still on xing-laptop is the old
+build; redeploy it before the next run.
+
+
+### Follow-ups, October 25 2026 (heartbeat loop)
+
+Done on xing-pc:
+- Restart history now survives a supervisor restart. The supervisor keeps unix timestamps in `restarts.txt` in the node folder, drops entries older than an hour on load, and counts them toward the limit of 3 per hour. Test: two kills, supervisor killed, new supervisor, two more kills. The node stopped on the 4th exit in total (it needed 5 without persistence) and wrote `failed\<unix>-restart-limit.txt`.
+- `--html PATH` writes a small auto-refreshing status page (peer, state, age, last counter). Checked against an unreachable peer: shows UNREACHABLE in red and refreshes every second. If the swap-in rename fails (Windows file in use), it writes the page in place.
+- Per-user scheduled task `ductei-node-watchdog` installed on xing-pc (logon trigger, runs hidden, production timings 30/90/300 s by default, install dir D:\dev\ductei-node, data in D:\dev\ductei-node\data). It starts and heartbeats.
+- Test suite: 21 passed (`cargo test -p ductei-core --features net`).
+
+Still open:
+- The status page cannot be published yet: `C:\me\www` is admin-write only, and `tailscale serve --set-path` needs a Windows admin. One elevated command fixes it (grant the user modify rights on `C:\me\www`).
+- xing-laptop was offline (last seen about an hour before the attempt), so the laptop install (`laptop-go.ps1`) and the 10-minute steady-state run (`steady-state.ps1`) have not run. Scripts are ready in `D:\dev\ductei-test`.
+- Spool is still unbounded.

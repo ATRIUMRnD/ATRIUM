@@ -21,8 +21,8 @@
 [CmdletBinding()]
 param(
   [string]$Peer     = "xing-pc",
-  [string]$PeerUser = $env:USERNAME,
-  [string]$PeerRoot = "C:/Users/$env:USERNAME/ATRIUM",
+  [string]$PeerUser = "xing",
+  [string]$PeerRoot = "D:/ATRIUM",
   [string[]]$Rooms  = @(".", "DUCTEI", "LIMEN", "Qallow", "VEYN"),
   [switch]$Fill,
   [switch]$Push,
@@ -33,6 +33,10 @@ param(
 # would turn that into a terminating error, so stay on "Continue" and check results explicitly.
 $ErrorActionPreference = "Continue"
 $sshOpts = @("-o", "BatchMode=yes", "-o", "ConnectTimeout=5", "-o", "StrictHostKeyChecking=accept-new")
+# Git for Windows ships its own ssh, which does not see the key Windows OpenSSH holds.
+# Pin git to the Windows OpenSSH client so git and the direct ssh calls below agree.
+$winSsh = "C:/Windows/System32/OpenSSH/ssh.exe"
+$env:GIT_SSH_COMMAND = "$winSsh " + ($sshOpts -join " ")
 $here   = Split-Path -Parent $PSScriptRoot
 $stamp  = Get-Date -Format "yyyyMMdd-HHmmss"
 $report = Join-Path $PSScriptRoot "witness/entangle-$stamp.txt"
@@ -55,8 +59,8 @@ foreach ($room in $Rooms) {
   $local = Join-Path $here $room
   $name  = if ($room -eq ".") { "ATRIUM" } else { $room }
   $remotePath = if ($room -eq ".") { $PeerRoot.TrimEnd("/") } else { $PeerRoot.TrimEnd("/") + "/" + $room }
-  $url = "ssh://$PeerUser@$Peer/$remotePath"
-  $env:GIT_SSH_COMMAND = "ssh " + ($sshOpts -join " ")
+  # scp-style URL: Windows sshd reads ssh://host/D:/x as "/D:/x" and git-receive-pack fails.
+  $url = "${PeerUser}@${Peer}:$remotePath"
 
   if (-not (Test-Path (Join-Path $local ".git"))) { Say "$name  SKIP  not a git repo here"; continue }
   Push-Location $local
@@ -76,7 +80,9 @@ foreach ($room in $Rooms) {
     }
 
     if (-not (git remote | Select-String -Quiet "^pc$")) { git remote add pc $url } else { git remote set-url pc $url }
-    git fetch --quiet pc 2>$null
+    # A failed fetch must not fall back to stale pc/* refs from an earlier run.
+    git fetch --quiet --prune pc 2>$null
+    if ($LASTEXITCODE -ne 0) { Say "$name  FETCH FAILED from $url; not comparing against stale refs"; $diverged++; continue }
     $peerHead = git rev-parse "pc/$branch" 2>$null
     if (-not $peerHead) { Say "$name  peer has no branch '$branch'"; $diverged++; continue }
 

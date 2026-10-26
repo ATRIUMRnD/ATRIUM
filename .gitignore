@@ -14,3 +14,13 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Test & runtime node bloat (must never enter ATRIUM tree)
+/ductei-anchor-node/
+*.patch
+*.log
+*.mdb
+*.db
+*.db-shm
+*.db-wal
+video-watch-gate-fingerprint.txt
