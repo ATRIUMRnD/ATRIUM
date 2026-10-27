@@ -62,6 +62,32 @@ realms."
 - LIMEN `main` branch protection now requires that verdict (plus
   `cargo test` and `pytest (py3.12)`), August 29 2026.
 
+## Progress (October 27, 2026)
+
+Landed in LIMEN#38 (merged October 27, 2026).
+
+- Held-out gate: `evaluate_proposal` also replays `HELDOUT_SCENARIOS`
+  (certified at spreads ~11.1, ~15.6 and ~20.2, plus two Tier 1 cases) under
+  the same rules, and no single scenario may cost more than under the live
+  policy. The proposer never reads the held-out set.
+- Rollback guard wired: limend runs `monitor_landed_proposals` at startup and
+  after each batch when `--proposals-dir` is set (on in
+  `scripts/limend.service`). The window is anchored in the live ledger, each
+  proposal resolves exactly once (`landed:`, then `monitor window closed:` or
+  `rollback:` rows), and a recorded rollback is re-applied after a restart.
+  The rollback is in-process, so it also files a `-revert-` claim under
+  `policy_proposals/pending/` for the CI verdict; once accepted,
+  `scripts/apply_proposal.py <id>` makes the one-line source edit (accepted
+  verdicts only, refuses a stale source) and a human commits it through the
+  PR gate.
+- Proposer: `scripts/propose.py` writes claims to `policy_proposals/pending/`
+  for the CI verdict. On the one gated knob it reports a fixed point: the meet
+  gate forbids every move that could lower exposure, and cost is equal in both
+  tiers, so the replay has no gradient there. Widening `GATED_POLICIES` is
+  still a separate decision, and a cost knob (for example MAX_SHOTS) would need
+  an outcome-based fidelity check first or the proposer would drive it to the
+  floor.
+
 ## Open questions
 
 - Claim-file location and schema: resolved as above.
