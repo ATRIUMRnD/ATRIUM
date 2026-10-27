@@ -6,3 +6,19 @@
 /Qallow/
 /VEYN/
 /dayroom0/
+
+# --- secrets and key material: never commit (security baseline) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.kdbx
+id_rsa*
+id_ed25519*
+*.seed
+*.seed.*
+*.dpapi
+secrets/
