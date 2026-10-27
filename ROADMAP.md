@@ -247,6 +247,27 @@ and the loop now exercises it nightly. Verified on the RTX 5080.
   server is not in the tree; the qallow-veyn-bridge `ws` path stays
   optional), cross-machine transport (Task 6), the �neiro charge path.
 
+## Task 8: brain joins the mesh (correction sync) - BUILT, awaiting merge (October 26, 2026)
+- Detail: harness-roadmap/08-brain-sync.md
+- Repos, in landing order: Qallow (tombstone retention in
+  persist_lmdb.c), DUCTEI (ductei-sync crate behind `net`, Qallow pin
+  bump as its own commit, scripts/smoke_brain_sync.py), brain
+  (adapt/src/sync.rs, `brain-adapt sync`).
+- Built ahead of Task 6 on the user's explicit direction; depends on
+  neither Task 5 nor Task 6 (QSW v1 into Qallow, plain TCP between
+  peers, IP allow-list on a Tailscale network).
+- Promotion: brain becomes a spine producer for scope
+  `brain.correction` only (AGENTS.md sections 1 and 7 updated).
+- Bug found and fixed on the way: Qallow deleted tombstones from LMDB,
+  so an older write merged after a delete resurrected the key. Now the
+  tombstone record is kept; the new C test fails on the old code.
+- Proof: two-node smoke, 17/17 checks, real binaries, loopback. Not yet
+  run on xing-pc / xing-laptop.
+- Unlocks: corrections made on either machine reach brain on the other;
+  xing-pc's Qallow holds the merged history.
+- Does not unlock: adapter or run-log sync, cert pinning (Task 6),
+  relay through a third node, mobile.
+
 ## Rules of the table
 
 - One task ACTIVE at a time. An agent proposing work on a BLOCKED task
@@ -255,3 +276,9 @@ and the loop now exercises it nightly. Verified on the RTX 5080.
   same PR as the final change, per the witness requirement.
 - Any change to task scope or order is proposed here first, in plain
   English, before implementation anywhere.
+
+## Status update (October 26, 2026, evening optimize pass)
+
+- Nightly limen-ductei smoke failed at 03:32: limend adds an optional `note` field when a job misses its fidelity target (the Windows CPU path), and smoke_e2e.py did not allow it. Allowed set widened in DUCTEI (uncommitted); rerun 18:30 ALL PASS. The 03:37 WSL GPU task passed because GPU runs meet the target, so the two tasks cover different paths and both stay.
+- Clippy auto-fixes (style only) in Qallow native_app/qallow_cli, universal-clock, video-watch chats.rs, DUCTEI transport.rs; all suites green. VEYN clippy-clean.
+- Blocked: ductei-mcp re-mirror and tailnet anchor peers (claimed by mcp-gate-lockdown on the laptop), laptop watchdog (laptop SSH timed out).

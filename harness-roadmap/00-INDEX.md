@@ -11,6 +11,7 @@ table (status, blockers, unlocks); these files are the how.
 - [06-peer-provisioning.md](06-peer-provisioning.md)  - Task 6: Peer provisioning (QUEUED)
 - [07-one-app-integration.md](07-one-app-integration.md)  - Task 7: One-app integration proof (BUILT, awaiting merge)
 - [05-heartbeat-loop.md](05-heartbeat-loop.md) - Task 5: Heartbeat loop (BUILT, scenarios run with scaled timings)
+- [08-brain-sync.md](08-brain-sync.md) - Task 8: brain joins the mesh, correction sync (BUILT, awaiting merge)
 
 Per AGENTS.md, an agent proposing work on a BLOCKED task must first show
 the blocker is resolved, and completing a task means updating

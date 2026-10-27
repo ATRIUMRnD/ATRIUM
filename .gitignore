@@ -1,4 +1,4 @@
-# ATRIUM holds only rules, routing, and roadmap documents — no code.
+# ATRIUM holds only rules, routing, and roadmap documents, no code.
 # The rooms (owned repos) and local tooling are checked out here but
 # tracked in their own repositories, not this one.
 /DUCTEI/
@@ -10,12 +10,12 @@
 # Local scratch for smoke runs (DUCTEI scripts accept --workdir target/tmp)
 /target/
 
-# Editor / OS
-.DS_Store
-Thumbs.db
-desktop.ini
+# Staging area for deploy/smoke scripts, key material copies, and WIP patches
+# (code and host-specific scripts live in the owning repos, not here)
+/_t8_stage/
+/router-candidates-staged-*.patch
+/ROUTER-CANDIDATES-WIP-README.txt
 
-<<<<<<< HEAD
 # ---------------------------------------------------------------------
 # Secrets and credentials (AGENTS.md: no hardcoded credentials, env vars only)
 # ---------------------------------------------------------------------
@@ -51,6 +51,18 @@ id_ecdsa*
 *token*.txt
 *apikey*
 *api_key*
+# Post-quantum and sync identity material (QFLTL / ductei-sync)
+*.seed
+*.dpapi
+identity.seed*
+identity.pub
+known_peers/
+*.kyber
+*.dilithium
+*.mlkem
+*.mldsa
+*.authkey
+*.ovpn
 
 # ---------------------------------------------------------------------
 # Node identity, runtime state, and machine fingerprints
@@ -72,6 +84,8 @@ spool/
 *.mdb
 lock.mdb
 data.mdb
+*.db-shm
+*.db-wal
 
 # ---------------------------------------------------------------------
 # Logs, dumps, traces, and captures (may contain hostnames, IPs, paths)
@@ -129,11 +143,12 @@ build/
 *.obj
 
 # ---------------------------------------------------------------------
-# Backups, archives, and scratch that can leak local paths or data
+# Backups, archives, patches, and scratch that can leak local paths or data
 # ---------------------------------------------------------------------
 *.bak
 *.orig
 *.rej
+*.patch
 *.tmp
 *.sqlite
 *.sqlite3
@@ -145,20 +160,11 @@ build/
 *.tgz
 
 # OS metadata
+.DS_Store
 Thumbs.db
 ehthumbs.db
+desktop.ini
 $RECYCLE.BIN/
 *.lnk
 .Spotlight-V100
 .Trashes
-=======
-# Test & runtime node bloat (must never enter ATRIUM tree)
-/ductei-anchor-node/
-*.patch
-*.log
-*.mdb
-*.db
-*.db-shm
-*.db-wal
-video-watch-gate-fingerprint.txt
->>>>>>> c76120963f748a25d500997ba7633942ff5708de

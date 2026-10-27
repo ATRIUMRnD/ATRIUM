@@ -4,7 +4,8 @@
 		{ "name": "DUCTEI (channel)", "path": "DUCTEI" },
 		{ "name": "LIMEN (compute)", "path": "LIMEN" },
 		{ "name": "Qallow (state)", "path": "Qallow" },
-		{ "name": "VEYN (senses)", "path": "VEYN" }
+		{ "name": "VEYN (senses)", "path": "VEYN" },
+		{ "name": "brain (mind)", "path": "../brain" }
 	],
 	"settings": {
 		"files.exclude": {
