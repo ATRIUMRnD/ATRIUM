@@ -14,3 +14,139 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ---------------------------------------------------------------------
+# Secrets and credentials (AGENTS.md: no hardcoded credentials, env vars only)
+# ---------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.env
+secrets/
+*.secret
+*.secrets
+credentials*
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.ppk
+.ssh/
+.gnupg/
+.aws/
+.azure/
+.kube/
+.npmrc
+.pypirc
+.netrc
+.git-credentials
+*token*.txt
+*apikey*
+*api_key*
+
+# ---------------------------------------------------------------------
+# Node identity, runtime state, and machine fingerprints
+# (daemon-owned; lamport counters and node identity must never be
+# fabricated or shared, and logs/fingerprints can identify the host)
+# ---------------------------------------------------------------------
+/ductei-anchor-node/
+*-fingerprint.txt
+*fingerprint*
+lamport
+node_id
+node-id
+node.id
+status.txt
+witness.log
+*.jsonl
+spool/
+*.lmdb
+*.mdb
+lock.mdb
+data.mdb
+
+# ---------------------------------------------------------------------
+# Logs, dumps, traces, and captures (may contain hostnames, IPs, paths)
+# ---------------------------------------------------------------------
+*.log
+logs/
+*.dmp
+*.mdmp
+*.stackdump
+*.pcap
+*.pcapng
+*.trace
+*.etl
+core
+core.*
+hs_err_pid*
+
+# ---------------------------------------------------------------------
+# Local tool, editor, and agent settings (contain user paths and history)
+# ---------------------------------------------------------------------
+.claude/
+CLAUDE.local.md
+.vscode/
+.idea/
+*.code-workspace.local
+*.local.json
+*.local.toml
+*.local.yaml
+*.local.yml
+.history/
+.vs/
+*.suo
+*.user
+*.swp
+*.swo
+*~
+
+# ---------------------------------------------------------------------
+# Build output, caches, and virtual environments
+# ---------------------------------------------------------------------
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+*.exe
+*.pdb
+*.dll
+*.obj
+
+# ---------------------------------------------------------------------
+# Backups, archives, and scratch that can leak local paths or data
+# ---------------------------------------------------------------------
+*.bak
+*.orig
+*.rej
+*.tmp
+*.sqlite
+*.sqlite3
+*.db
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+
+# OS metadata
+Thumbs.db
+ehthumbs.db
+$RECYCLE.BIN/
+*.lnk
+.Spotlight-V100
+.Trashes
