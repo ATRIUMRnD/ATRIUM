@@ -13,6 +13,95 @@ invariant-checked results. Smoke test passed on all four scenarios:
 good job, restart replicability, malformed request, malformed cert.
 Everything below grows that loop. Nothing starts over.
 
+## Status update (October 24, 2026)
+
+Verified against live repo history on xing-pc. Two roadmap items moved
+since the July 22 baseline:
+
+- Task 2, network transport: DUCTEI@d951787 gates the TCP transport
+  behind a `net` feature (implied by grpc/quic), so a default build has
+  zero network code, and adds transport::send_local_first() which falls
+  back to the local persistence-before-ack Channel only when the peer is
+  unreachable. CI runs default, `net`, and `pq` paths. Remaining: the
+  ML-KEM-768 scoped design is exercised under `pq` in CI, but no real
+  multi-node deployment exists yet.
+- Task 3, self-improvement loop: LIMEN@1332973 adds the ledger-backed
+  routing-policy proposal gate (proposal.py, append-only
+  policy_proposals table, build_proposal_report, run_proposal.py, and the
+  policy-proposal-verdict CI job), scoped to CRITICALITY_SPREAD_THRESHOLD
+  only. One demonstration proposal is archived under
+  policy_proposals/accepted/. The verdict check is now required on LIMEN
+  main (routing-policy proposal verdict, confirmed October 24, 2026).
+- Branch protection confirmed by the owner October 24, 2026 (repos live
+  under ATRIUMRnD): DUCTEI main, LIMEN main (requires cargo test, pytest
+  py3.12, routing-policy proposal verdict), and ATRIUM master (pull
+  request required, 0 approvals, no checks). Admin bypass is on. DUCTEI
+  and LIMEN also require branches to be up to date before merging.
+- Rooms outside the core mesh are now listed in AGENTS.md section 7.
+  They are tracked there, not dispatched from this table.
+- Known drift: VEYN on xing-pc (D:\VEYN) shows a single "Initial commit"
+  (69f7c5d, 2026-08-29), so the VEYN@1913f41 and VEYN@da747ec refs in this
+  file and BUILD.md no longer resolve locally. Record only, no action.
+
+## Status update (October 25, 2026)
+
+Quantum backbone on xing-pc: LIMEN gained a local GPU statevector tier 0
+and the loop now exercises it nightly. Verified on the RTX 5080.
+
+- LIMEN@ee4caed (on main, CI green): fidelity tier 0 `aer_gpu` in the
+  budget router. Opt-in via LIMEN_LOCAL_GPU=1 or
+  run_route_request(local_gpu_first=True); limend inherits it from the
+  environment. Cap is read from nvidia-smi at call time:
+  floor(log2(0.8 * free_bytes / 8)), max 30, single-precision Aer, no
+  eviction of other GPU tenants. Idle 5080 reads cap 30; with LM Studio
+  holding ~7 GB it reads 29. Prepend-only: Tier 2 plans and pinned
+  hardware tiers are returned unchanged, anything that does not fit falls
+  through to the ordinary route() decision. run_pipeline(backend="aer")
+  now runs the QAOA grid search on Aer too, so 24+ variable problems run
+  on the GPU end to end (24 vars: 19 s). Decided: no limend daemon or
+  systemd unit until brain, jspace-lab, or Self.Define import limen in
+  code; a scheduled run covers today's two consumers.
+- LIMEN@d029fe5 (#37) widened the limend cert summary
+  (success_probability, fidelity_target, target_met; fidelity_estimate
+  kept as a deprecated alias for one release). DUCTEI working folder
+  (uncommitted): ductei-limen CertSummary now reads success_probability
+  with the alias accepted, tolerates both keys during the window, carries
+  target_met, and still emits fidelity_estimate on the wire;
+  scripts/smoke_e2e.py asserts required-fields-plus-known-set instead of
+  an exact field match, and adds an explicit no-credential-key check (I1).
+  The nightly caught this drift the first night it ran.
+- Nightly on xing-pc (Windows Task Scheduler): limen-ductei-nightly-smoke
+  (03:30, C:\me\scripts\nightly-smoke.ps1: four DUCTEI scenarios on the
+  Windows venv plus a 24-var tier-0 GPU route in WSL, logs
+  C:\me\logs\smoke) and limen-nightly-smoke (03:37, WSL,
+  C:\me\scripts\limen-nightly-smoke.sh: the four scenarios through the
+  WSL venv with tier 0 enabled, logs C:\me\logs\limen-smoke). Both passed
+  October 25. The two overlap; consolidating into one is a cleanup item,
+  not a blocker.
+- WSL2 Ubuntu-24.04 fixed for unattended runs: pam_lastlog.so (removed in
+  24.04) no longer referenced in /etc/pam.d/login, snapd and wsl-pro
+  masked; systemd reports running for system and user.
+- Does not unlock: quantum speedup for LLM work, qubit counts above 30,
+  or revenue by itself. It is harness plumbing that makes the loop free
+  to run every night.
+- Oct 26, 2026, what tier 0 is for, measured (limen/study/, uncommitted in
+  D:\LIMEN; `python -m limen.study <gap|cut|bench|verify|all>`):
+  gap: ideal-vs-hardware on the final QAOA circuit; success_probability
+  collapses like 2**-n (0.0005 at 20 qubits) so the record now carries
+  distribution fidelity / TVD (exact up to 18 qubits) and expected-energy
+  gap (valid at any width). cut: 16 vars into 8q pieces took 57 min of
+  reconstruction vs 8 s exact, mean marginal error 0.031, 15/16 signs
+  right; cost is n * 4**cuts classical post-processing, not the GPU, so
+  tier-0 cutting is a correctness oracle, not a throughput path. bench on
+  aer_gpu: TSP 3 cities ratio 1.0 (1.4 s); 4 and 5 cities decode to
+  infeasible tours (p=1 QAOA + argmax, the 0.15% feasible-rate weakness
+  from June); Max-Cut 3-regular 12/20/28 nodes ratio 0.93 / 0.83 / 0.37
+  (28-node ratio is against a local-search lower bound, labelled). verify:
+  Tier 2 (d=5 ECC) at 20 vars reproduces the ideal solution exactly;
+  predicted logical error bound 5.8e-6. Takeaway: tier 0 is doing its job
+  as ground truth; the weak link it exposes is p=1 QAOA with argmax
+  decoding, which is where the next LIMEN work should go.
+
 ## Task 1: CI harness  - DONE (August 29, 2026)
 - Detail: harness-roadmap/01-ci-harness.md
 - Repos: DUCTEI (primary), LIMEN (pinned rev, simulator path)

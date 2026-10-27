@@ -80,3 +80,32 @@ and reports instead of working around it.
 - No hardcoded credentials anywhere. Ever.
 - Package name is limen-compiler, never limen, in all docs and manifests.
 - No commiting, pushing, or merging without explicit user instruction.
+
+## 7. Rooms outside the core mesh (registered October 24, 2026)
+
+ATRIUM covers the whole software stack. The four repos in section 1 are
+the routed core. The rooms below sit under ATRIUM but are not yet wired
+through DUCTEI, so the section 2 invariants and section 3 governance do
+not apply to them automatically. An agent working in one of these acts in
+that room only, and a change that would touch a core repo is split out and
+routed per section 1.
+
+| Room | Path on xing-pc | What it is |
+|---|---|---|
+| Player Harness | D:\player-harness | Game-agnostic, brain-agnostic AI embodiment runtime (Rust) |
+| brain | D:\brain | Planned open-source LLM + J-lens gate + Jev decision model |
+| jspace-lab | D:\jspace-lab | J-lens readout, intent gate, quantum vs pseudo-random sampling test |
+| Self.Define | D:\self-define | Choice-driven Rust game with the QFL power system |
+| Oneiro | D:\oneiro | Lucid-dreaming expression of the stack, needs a non-Muse REM trigger |
+| SYNOID | D:\SYNOID | Application layer, outside the core mesh |
+| Grand_Cross | D:\Grand_Cross | AI-driven NPC/narrative system with a Gemma DM engine |
+| ward | D:\dev\ward | Security monitoring tool with sequential integrity checks I0 to I7 |
+| VEYN | D:\VEYN | Core repo, but cloned outside the D:\ATRIUM folder |
+
+Standalone projects kept separate on purpose, not part of routing:
+universal-clock (D:\dev\universal-clock) and the TI-84 algebra solver
+(D:\dev\TI).
+
+Rule for promotion: a room joins the core mesh only through a proposal in
+ROADMAP.md that names its owning concerns, which invariants apply, what
+it unlocks, and what it does not unlock.

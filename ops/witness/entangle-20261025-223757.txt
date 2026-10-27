@@ -1,0 +1,9 @@
+entangle witness  2026-10-25T22:37:57  host=XING_LAPTOP  peer=xing-pc
+
+ATRIUM  MATCH  local=b88d9e6 peer=b88d9e6 branch=docs/status-oct-24-25 dirty=2
+DUCTEI  MATCH  local=ba38c52 peer=ba38c52 branch=feat/mcp-gate-net-timeouts dirty=3
+LIMEN  MATCH  local=cd20709 peer=cd20709 branch=feat/ecc-everywhere dirty=0
+Qallow  MATCH  local=e69ebd0 peer=e69ebd0 branch=main dirty=0
+VEYN  MATCH  local=f5dc96d peer=f5dc96d branch=fix/clippy-double-must-use dirty=0
+
+result: ENTANGLED

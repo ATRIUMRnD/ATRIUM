@@ -1,0 +1,4 @@
+entangle witness  2026-10-25T20:44:42  host=XING_LAPTOP  peer=xing-pc
+
+STOP  SSH to there@xing-pc refused. Authorize this machine's public key on the peer
+      (see ops/ENTANGLE.md), then rerun.

@@ -15,6 +15,7 @@
 Thumbs.db
 desktop.ini
 
+<<<<<<< HEAD
 # ---------------------------------------------------------------------
 # Secrets and credentials (AGENTS.md: no hardcoded credentials, env vars only)
 # ---------------------------------------------------------------------
@@ -150,3 +151,14 @@ $RECYCLE.BIN/
 *.lnk
 .Spotlight-V100
 .Trashes
+=======
+# Test & runtime node bloat (must never enter ATRIUM tree)
+/ductei-anchor-node/
+*.patch
+*.log
+*.mdb
+*.db
+*.db-shm
+*.db-wal
+video-watch-gate-fingerprint.txt
+>>>>>>> c76120963f748a25d500997ba7633942ff5708de

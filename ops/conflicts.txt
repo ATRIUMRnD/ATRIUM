@@ -1,0 +1,288 @@
+﻿######## ATRIUM
+---- AGENTS.md  hunks=1  lines=116
+   83: <<<<<<< Updated upstream
+   84: =======
+   85: 
+   86: 
+   87: 
+   88: ## 7. Rooms outside the core mesh (registered October 24, 2026)
+   89: 
+   90: ATRIUM covers the whole software stack. The four repos in section 1 are
+   91: the routed core. The rooms below sit under ATRIUM but are not yet wired
+   92: through DUCTEI, so the section 2 invariants and section 3 governance do
+   93: not apply to them automatically. An agent working in one of these acts in
+   94: that room only, and a change that would touch a core repo is split out and
+   95: routed per section 1.
+   96: 
+   97: | Room | Path on xing-pc | What it is |
+   98: |---|---|---|
+   99: | Player Harness | D:\player-harness | Game-agnostic, brain-agnostic AI embodiment runtime (Rust) |
+  100: | brain | D:\brain | Planned open-source LLM + J-lens gate + Jev decision model |
+  101: | jspace-lab | D:\jspace-lab | J-lens readout, intent gate, quantum vs pseudo-random sampling test |
+  102: | Self.Define | D:\self-define | Choice-driven Rust game with the QFL power system |
+  103: | Oneiro | D:\oneiro | Lucid-dreaming expression of the stack, needs a non-Muse REM trigger |
+  104: | SYNOID | D:\SYNOID | Application layer, outside the core mesh |
+  105: | Grand_Cross | D:\Grand_Cross | AI-driven NPC/narrative system with a Gemma DM engine |
+  106: | ward | D:\dev\ward | Security monitoring tool with sequential integrity checks I0 to I7 |
+  107: | VEYN | D:\VEYN | Core repo, but cloned outside the D:\ATRIUM folder |
+  108: 
+  109: Standalone projects kept separate on purpose, not part of routing:
+  110: universal-clock (D:\dev\universal-clock) and the TI-84 algebra solver
+  111: (D:\dev\TI).
+  112: 
+  113: Rule for promotion: a room joins the core mesh only through a proposal in
+  114: ROADMAP.md that names its owning concerns, which invariants apply, what
+  115: it unlocks, and what it does not unlock.
+  116: >>>>>>> Stashed changes
+---- ROADMAP.md  hunks=3  lines=202
+   16: <<<<<<< Updated upstream
+   17: ## Task 1: CI harness  - DONE (August 29, 2026)
+   18: =======
+   19: ## Status update (October 24, 2026)
+   20: 
+   21: Verified against live repo history on xing-pc. Two roadmap items moved
+   22: since the July 22 baseline:
+   23: 
+   24: - Task 2, network transport: DUCTEI@d951787 gates the TCP transport
+   25:   behind a `net` feature (implied by grpc/quic), so a default build has
+   26:   zero network code, and adds transport::send_local_first() which falls
+   27:   back to the local persistence-before-ack Channel only when the peer is
+   28:   unreachable. CI runs default, `net`, and `pq` paths. Remaining: the
+   29:   ML-KEM-768 scoped design is exercised under `pq` in CI, but no real
+   30:   multi-node deployment exists yet.
+   31: - Task 3, self-improvement loop: LIMEN@1332973 adds the ledger-backed
+   32:   routing-policy proposal gate (proposal.py, append-only
+   33:   policy_proposals table, build_proposal_report, run_proposal.py, and the
+   34:   policy-proposal-verdict CI job), scoped to CRITICALITY_SPREAD_THRESHOLD
+   35:   only. One demonstration proposal is archived under
+   36:   policy_proposals/accepted/. The verdict check is now required on LIMEN
+   37:   main (routing-policy proposal verdict, confirmed October 24, 2026).
+   38: - Branch protection confirmed by the owner October 24, 2026 (repos live
+   39:   under ATRIUMRnD): DUCTEI main, LIMEN main (requires cargo test, pytest
+   40:   py3.12, routing-policy proposal verdict), and ATRIUM master (pull
+   41:   request required, 0 approvals, no checks). Admin bypass is on. DUCTEI
+   42:   and LIMEN also require branches to be up to date before merging.
+   43: - Rooms outside the core mesh are now listed in AGENTS.md section 7.
+   44:   They are tracked there, not dispatched from this table.
+   45: - Known drift: VEYN on xing-pc (D:\VEYN) shows a single "Initial commit"
+   46:   (69f7c5d, 2026-08-29), so the VEYN@1913f41 and VEYN@da747ec refs in this
+   47:   file and BUILD.md no longer resolve locally. Record only, no action.
+   48: 
+   49: ## Status update (October 25, 2026)
+   50: 
+   51: Quantum backbone on xing-pc: LIMEN gained a local GPU statevector tier 0
+   52: and the loop now exercises it nightly. Verified on the RTX 5080.
+   53: 
+   54: - LIMEN@ee4caed (on main, CI green): fidelity tier 0 `aer_gpu` in the
+   55:   budget router. Opt-in via LIMEN_LOCAL_GPU=1 or
+   56:   run_route_request(local_gpu_first=True); limend inherits it from the
+   57:   environment. Cap is read from nvidia-smi at call time:
+   58:   floor(log2(0.8 * free_bytes / 8)), max 30, single-precision Aer, no
+   59:   eviction of other GPU tenants. Idle 5080 reads cap 30; with LM Studio
+   60:   holding ~7 GB it reads 29. Prepend-only: Tier 2 plans and pinned
+   61:   hardware tiers are returned unchanged, anything that does not fit falls
+   62:   through to the ordinary route() decision. run_pipeline(backend="aer")
+   63:   now runs the QAOA grid search on Aer too, so 24+ variable problems run
+   64:   on the GPU end to end (24 vars: 19 s). Decided: no limend daemon or
+   65:   systemd unit until brain, jspace-lab, or Self.Define import limen in
+   66:   code; a scheduled run covers today's two consumers.
+   67: - LIMEN@d029fe5 (#37) widened the limend cert summary
+   68:   (success_probability, fidelity_target, target_met; fidelity_estimate
+   69:   kept as a deprecated alias for one release). DUCTEI working folder
+   70:   (uncommitted): ductei-limen CertSummary now reads success_probability
+   71:   with the alias accepted, tolerates both keys during the window, carries
+   72:   target_met, and still emits fidelity_estimate on the wire;
+   73:   scripts/smoke_e2e.py asserts required-fields-plus-known-set instead of
+   74:   an exact field match, and adds an explicit no-credential-key check (I1).
+   75:   The nightly caught this drift the first night it ran.
+   76: - Nightly on xing-pc (Windows Task Scheduler): limen-ductei-nightly-smoke
+   77:   (03:30, C:\me\scripts\nightly-smoke.ps1: four DUCTEI scenarios on the
+   78:   Windows venv plus a 24-var tier-0 GPU route in WSL, logs
+   79:   C:\me\logs\smoke) and limen-nightly-smoke (03:37, WSL,
+   80:   C:\me\scripts\limen-nightly-smoke.sh: the four scenarios through the
+   81:   WSL venv with tier 0 enabled, logs C:\me\logs\limen-smoke). Both passed
+   82:   October 25. The two overlap; consolidating into one is a cleanup item,
+   83:   not a blocker.
+   84: - WSL2 Ubuntu-24.04 fixed for unattended runs: pam_lastlog.so (removed in
+   85:   24.04) no longer referenced in /etc/pam.d/login, snapd and wsl-pro
+   86:   masked; systemd reports running for system and user.
+   87: - Does not unlock: quantum speedup for LLM work, qubit counts above 30,
+   88:   or revenue by itself. It is harness plumbing that makes the loop free
+   89:   to run every night.
+   90: 
+   91: ## Task 1: CI harness - DONE (verified October 24, 2026)
+   92: >>>>>>> Stashed changes
+  100: <<<<<<< Updated upstream
+  101:   for merge (met, August 29 2026). DUCTEI `main` now requires status
+  102:   checks [test, e2e-smoke, e2e-smoke-qallow, e2e-smoke-veyn], strict,
+  103:   no force-push, no deletions. ATRIUM `master` is also protected
+  104:   (pull-request reviews, no force-push, no deletions).
+  105: - Unlocks: Tasks 2 and 3 are safe to build; regressions caught same day.
+  106: =======
+  107:   for merge (MET, confirmed by the owner October 24, 2026: DUCTEI main
+  108:   requires test, e2e-smoke, e2e-smoke-qallow, e2e-smoke-veyn, and
+  109:   e2e-smoke-loop; the conformance check runs as a step inside test).
+  110: - Unlocks: Tasks 2 and 3 become safe to build; regressions caught same
+  111:   day. Treating this as unblocked for GAP 2/3 build work below since the
+  112:   check exists and is green â?" the only missing piece is enforcement.
+  113: >>>>>>> Stashed changes
+  131: <<<<<<< Updated upstream
+  132: ## Task 3: Self-improvement loop  - DONE (August 29, 2026)
+  133: =======
+  134: ## Task 3: Self-improvement loop - BUILT, ENFORCED (October 24, 2026)
+  135: >>>>>>> Stashed changes
+---- harness-roadmap/00-INDEX.md  hunks=1  lines=21
+    6: <<<<<<< Updated upstream
+    7: - [01-ci-harness.md](01-ci-harness.md)  - Task 1: CI harness (DONE)
+    8: - [02-spine-flow.md](02-spine-flow.md)  - Task 2: Spine flow (DONE)
+    9: - [03-self-improvement-loop.md](03-self-improvement-loop.md)  - Task 3: Self-improvement loop (DONE)
+   10: - [04-qallow-kernel-invariants.md](04-qallow-kernel-invariants.md) - Task 4: Qallow kernel-level invariants (ACTIVE)
+   11: =======
+   12: - [01-ci-harness.md](01-ci-harness.md) â?" Task 1: CI harness (DONE, verified October 24, 2026)
+   13: - [02-spine-flow.md](02-spine-flow.md) â?" Task 2: Spine flow (local pairs DONE, network transport started)
+   14: - [03-self-improvement-loop.md](03-self-improvement-loop.md) â?" Task 3: Self-improvement loop (BUILT, ENFORCED)
+   15: - [04-qallow-kernel-invariants.md](04-qallow-kernel-invariants.md) â?" Task 4: Qallow kernel-level invariants (LONG HORIZON)
+   16: - [05-heartbeat-loop.md](05-heartbeat-loop.md) - Task 5: Heartbeat loop (BUILT, scenarios run with scaled timings)
+   17: >>>>>>> Stashed changes
+---- harness-roadmap/01-ci-harness.md  hunks=1  lines=70
+    3: <<<<<<< Updated upstream
+    4: Status: DONE (August 29, 2026)
+    5: =======
+    6: Status: DONE (verified October 24, 2026; required checks confirmed by the owner)
+    7: >>>>>>> Stashed changes
+---- harness-roadmap/02-spine-flow.md  hunks=3  lines=106
+    3: <<<<<<< Updated upstream
+    4: Status: DONE (August 29, 2026)
+    5: =======
+    6: Status: LOCAL PAIRS DONE, NETWORK TRANSPORT STARTED (October 24, 2026)
+    7: >>>>>>> Stashed changes
+   12: <<<<<<< Updated upstream
+   13: Resolved. Task 1 is DONE: e2e jobs green and required on DUCTEI main.
+   14: =======
+   15: Task 1's CI harness is green and required on DUCTEI main (confirmed by the
+   16: owner, October 24, 2026). No blocker remains.
+   17: >>>>>>> Stashed changes
+   85: <<<<<<< Updated upstream
+   86:   design.**
+   87: - **Network transport: DONE.** DUCTEI@d951787 (July 24 2026) gates the
+   88:   existing TCP transport behind a `net` feature (implied by grpc/quic)
+   89:   so a default build has zero network code. `transport::send_local_first()`
+   90:   tries the network, then falls back to the local persistence-before-ack
+   91:   Channel only on unreachability. CI runs the workspace suite with
+   92:   default features, `net`, and `pq`. Green:
+   93:   https://github.com/xingxerx/DUCTEI/actions/runs/30066003124
+   94: =======
+   95:   design.** Network transport (GAP 4) has started: see ../BUILD.md sections
+   96:   5 and 6 (gated net feature at DUCTEI@d951787, two-machine smoke on
+   97:   October 24, 2026).
+   98: >>>>>>> Stashed changes
+---- harness-roadmap/03-self-improvement-loop.md  hunks=2  lines=78
+    3: <<<<<<< Updated upstream
+    4: Status: DONE (August 29, 2026)
+    5: =======
+    6: Status: BUILT, ENFORCED (October 24, 2026)
+    7: >>>>>>> Stashed changes
+   12: <<<<<<< Updated upstream
+   13: Resolved. Task 1 is DONE.
+   14: =======
+   15: Task 1's CI harness is green and required on DUCTEI main (confirmed by the
+   16: owner, October 24, 2026). No blocker remains.
+   17: >>>>>>> Stashed changes
+######## LIMEN
+---- docs/CHANGELOG.md  hunks=1  lines=323
+    8: <<<<<<< Updated upstream
+    9: - Fixed: the ledger-accepted routing policy
+   10:   `2026-07-24-raise-criticality-threshold` is now actually applied â?"
+   11:   `CRITICALITY_SPREAD_THRESHOLD` moves 2.0 -> 8.0 (`budget_router.py`).
+   12:   The proposal was accepted and witnessed in the append-only proposal
+   13:   ledger on 2026-07-24 (cost delta 0, physical-error exposure delta
+   14:   -698.7 across the replay scenarios) but never merged into the source,
+   15:   so QUBOs with moderately skewed criticality spectra (spread in
+   16:   [2.0, 8.0)) kept being routed into Tier 2 (HW_CERTIFIED) and paying
+   17:   for surface-code ECC allocation with no measured benefit. Tests and
+   18:   examples whose Tier-2 fixtures relied on the old cutoff now use
+   19:   genuinely heavy-tailed spectra (16-leaf star Max-Cut, spread 8.5), or
+   20:   pin `force_tier=Tier.HW_CERTIFIED` where Tier 2 is the thing under
+   21:   test (`examples/router_tier2_kingston.py` and its fetch companion).
+   22: - Fixed: `scripts/qpu_smoke_tier2.py` pointed its `results_dir` at
+   23:   `scripts/results/` instead of the repo-root `results/`. That directory
+   24:   holds no certs or calibration snapshots, so the smoke-test run planned
+   25:   against bare `DEFAULT_FLEET` priors â?" which is how its persisted plan
+   26:   (`scripts/results/router_tier2_kingston_d9a0...state.json`) landed on
+   27:   `ibm_fez` via the alphabetical name tiebreak with the hardcoded 1e-3
+   28:   physical_error_rate despite three calibrated backends being available.
+   29:   Pointing at `results/` folds real history/calibration into the fleet
+   30:   and restores the re-attach contract with
+   31:   `examples/router_tier2_kingston_fetch.py`, which reads the repo-root
+   32:   results dir.
+   33: =======
+   34: - ECC everywhere it applies: the surface-code logical-error certificate
+   35:   now covers every hardware tier, every certificate shape, and every
+   36:   downstream consumer. (1) `route()` sets `encode_logical=True`,
+   37:   `distance`, calibration-derived `physical_error_rate` and the
+   38:   `measured_logical_error` prior for Tier 1 (`HW_STANDARD`) plans as well
+   39:   as Tier 2 -- the term is an analytic, solution-agnostic model that
+   40:   costs no credits and no qubits, so there was no reason a noisy Tier 1
+   41:   run should report no logical error rate (and feed nothing into the
+   42:   router ledger). The criticality-ranked patch budget
+   43:   (`patch_assignments`/`physical_qubit_budget`) stays Tier 2 only; Tier 0
+   44:   plans now carry an explicit "ECC: skipped (noiseless)" note.
+   45:   (2) `run_pipeline` and `run_cut_route_request` compute the term through
+   46:   one shared helper (`limen.pipeline._certify_ecc`), and
+   47:   `CuttingCertificate` gained `aggregate_logical_error_rate`,
+   48:   `predicted_logical_error_bound`, `measured_logical_error_prior` and
+   49:   `roundtrip_corrects_all_weight1` -- previously a cut-circuit run only
+   50:   reported the per-qubit rate with no n-qubit aggregate, no prior bound
+   51:   and no gate-executed round-trip. (3) `_record_route_outcome` and
+   52:   `build_route_report` accept a `CuttingCertificate`: before, both
+   53:   raised `AttributeError` on it and were silently swallowed by the
+   54:   best-effort wrappers, so cut-circuit hardware runs were never
+   55:   witnessed in the ledger nor given a route report. `RouteReport` also
+   56:   gained `ecc_distance` and `predicted_logical_error_bound` (rendered in
+   57:   the markdown next to the raw rates); `success_probability` is None for
+   58:   a cutting run. `limen.router.proposal`'s physical-error-exposure proxy
+   59:   deliberately still counts Tier 2 scenarios only -- it is a
+   60:   policy-evaluation metric, not an ECC application.
+   61: >>>>>>> Stashed changes
+######## DUCTEI
+---- ductei-core/src/transport.rs  hunks=2  lines=356
+   13: <<<<<<< Updated upstream
+   14: use std::path::{PathBuf, Path};
+   15: =======
+   16: use std::time::Duration;
+   17: 
+   18: /// How long a sender waits for a peer to accept a connection before it
+   19: /// counts as unreachable. Without a bound, a peer that silently drops
+   20: /// packets stalls the caller for a minute or more.
+   21: pub const CONNECT_TIMEOUT: Duration = Duration::from_secs(2);
+   22: /// How long a sender waits for the ack byte once connected.
+   23: pub const ACK_TIMEOUT: Duration = Duration::from_secs(5);
+   24: >>>>>>> Stashed changes
+   75: <<<<<<< Updated upstream
+   76:         Ok(Self { stream: TcpStream::connect(addr)?, outbox_path: default_outbox_path() })
+   77:     }
+   78:     /// Attach a durable outbound intent/receipt log. When set, the client
+   79:     /// records intents before any network write and receipts before returning.
+   80:     pub fn with_outbox_path(mut self, path: impl Into<PathBuf>) -> Self {
+   81:         self.outbox_path = path.into();
+   82:         self
+   83: =======
+   84:         Self::connect_timeout(addr, CONNECT_TIMEOUT)
+   85:     }
+   86: 
+   87:     /// Try each resolved address with a bounded wait; the stream also gets
+   88:     /// bounded read and write waits so a stuck peer cannot hang the sender.
+   89:     pub fn connect_timeout(addr: impl ToSocketAddrs, timeout: Duration) -> std::io::Result<Self> {
+   90:         let mut last = std::io::Error::new(std::io::ErrorKind::InvalidInput, "no address resolved");
+   91:         for a in addr.to_socket_addrs()? {
+   92:             match TcpStream::connect_timeout(&a, timeout) {
+   93:                 Ok(stream) => {
+   94:                     stream.set_read_timeout(Some(ACK_TIMEOUT))?;
+   95:                     stream.set_write_timeout(Some(ACK_TIMEOUT))?;
+   96:                     return Ok(Self { stream });
+   97:                 }
+   98:                 Err(e) => last = e,
+   99:             }
+  100:         }
+  101:         Err(last)
+  102: >>>>>>> Stashed changes
