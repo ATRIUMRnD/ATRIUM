@@ -27,6 +27,7 @@ secrets/
 *.secret
 *.secrets
 credentials*
+# --- secrets and key material: never commit (security baseline) ---
 *.pem
 *.key
 *.p12
@@ -168,3 +169,5 @@ $RECYCLE.BIN/
 *.lnk
 .Spotlight-V100
 .Trashes
+*.kdbx
+*.seed.*
