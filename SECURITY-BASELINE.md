@@ -33,7 +33,7 @@ the `chore/security-baseline` pull requests, so a row is only true once its PR i
 
 | Repository | Unit or image | Bind and auth | CI pinned, read-only token | Dependabot | SECURITY.md | Key files ignored |
 |---|---|---|---|---|---|---|
-| LIMEN | `limend.service` and `deploy_node.sh` sandboxed, unprivileged | gRPC loopback default, cleartext refused off-loopback | yes | yes | yes | yes |
+| LIMEN | `limend.service` and `deploy_node.sh` sandboxed, unprivileged | gRPC defaults to the Tailscale address (else loopback), TLS required off-loopback | yes | yes | yes | yes |
 | DUCTEI | none | already refuses wildcard listeners | yes (PAT checkout no longer persists) | yes | yes | yes |
 | Qallow | none | not reviewed | yes | yes | yes | yes |
 | VEYN | Dockerfile non-root, auth on, digests pinned; compose hardened | daemon binds loopback by design | yes | yes (incl. Docker) | yes | yes |
@@ -61,9 +61,8 @@ the `chore/security-baseline` pull requests, so a row is only true once its PR i
 
 - **Unbuilt Docker image.** The VEYN image and compose stack were validated with
   `docker compose config` only; the Docker engine was not running. Build and run them once:
-  `docker compose up --build`, then `docker compose logs consumer`.
-- **VEYN `Cargo.lock` is stale** against its manifests (the DUCTEI git dependency), so
-  `cargo build --locked` fails. Refresh the lock, then add `--locked` to the Dockerfile.
+  `docker compose up --build`, then `docker compose logs consumer`. The Dockerfile now builds
+  with `--locked` (the lockfile was refreshed), so that build is part of the check.
 - **UDP listeners on all interfaces** in VEYN's EEG adapter and oneiro's `phase_sync` are there for
   devices on the LAN. Bind them to a specific interface or Tailscale address, and firewall the port.
 - **QFLTL's network tools** (sniffer, guard, attacker) bind wildcards because that is their job.
@@ -71,6 +70,9 @@ the `chore/security-baseline` pull requests, so a row is only true once its PR i
 - **The proposal ledger is append-only but not signed.** `apply_proposal.py` refuses a verdict that
   differs from the ledger, which stops casual edits, not someone who can rewrite both. Review of the
   commit, signed commits and branch protection are the defence.
+- **Tailnet is not authentication.** WireGuard encrypts a Tailscale link, but any device on the
+  tailnet can still reach a service bound to its Tailscale address. LIMEN therefore requires TLS
+  there too; use mutual TLS (a client CA) so only known peers can call a node.
 - **Dependabot and path or git dependencies.** Cargo manifests that point outside the repository
   (DUCTEI to VEYN) can make Dependabot report errors for that directory.
 - **No audit gate in CI yet.** `cargo audit`, `cargo deny` and `pip-audit` are not installed or
