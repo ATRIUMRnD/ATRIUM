@@ -237,7 +237,7 @@ and the loop now exercises it nightly. Verified on the RTX 5080.
   (separate, auditable commit) and must not be a required check before.
 - The launcher: DUCTEI scripts/atrium_up.py runs the same loop as
   long-lived processes from one command. Verified live on-box: real
-  veyn-core daemon, �neiro-shaped /oneiro/watch OSC cue (N2 -> REM),
+  veyn-core daemon, watch-shaped /oneiro/watch OSC cue (N2 -> REM),
   rising-edge rem_detected, certificate in the shared store in ~4 s.
 - Done when: e2e-smoke-loop is green on DUCTEI main and required - NOT
   YET (nothing here is committed; see AGENTS.md section 6).
@@ -245,7 +245,7 @@ and the loop now exercises it nightly. Verified on the RTX 5080.
   property with one durable state, not a claim.
 - Does not unlock: GET /export snapshot on REM (Qallow's FastAPI reasoning
   server is not in the tree; the qallow-veyn-bridge `ws` path stays
-  optional), cross-machine transport (Task 6), the �neiro charge path.
+  optional), cross-machine transport (Task 6), any commercial charge path.
 
 ## Task 8: brain joins the mesh (correction sync) - BUILT, awaiting merge (October 26, 2026)
 - Detail: harness-roadmap/08-brain-sync.md
@@ -282,3 +282,12 @@ and the loop now exercises it nightly. Verified on the RTX 5080.
 - Nightly limen-ductei smoke failed at 03:32: limend adds an optional `note` field when a job misses its fidelity target (the Windows CPU path), and smoke_e2e.py did not allow it. Allowed set widened in DUCTEI (uncommitted); rerun 18:30 ALL PASS. The 03:37 WSL GPU task passed because GPU runs meet the target, so the two tasks cover different paths and both stay.
 - Clippy auto-fixes (style only) in Qallow native_app/qallow_cli, universal-clock, video-watch chats.rs, DUCTEI transport.rs; all suites green. VEYN clippy-clean.
 - Blocked: ductei-mcp re-mirror and tailnet anchor peers (claimed by mcp-gate-lockdown on the laptop), laptop watchdog (laptop SSH timed out).
+
+## Status update (October 28, 2026, decision gates stay unstuck)
+
+- brain: xing-pc's 5 unpushed Oct 27 commits merged with GitHub's 4 (probe v2, security baseline) in one local merge commit, c44df4a, not pushed. The duplicate key: value parser was folded into parse_proposal.
+- brain, uncommitted: gate fallback (a failed or hung lens/decider call no longer ends `ask`), gate timeout 300 s to 30 s, repeat guard, act guard, reply timeout. All are on for `ask` and off for eval unless set, and labeled in run names. 84 tests pass, clippy clean. Live on xing-pc: with a dead sidecar, `ask` answers; with a hung test sidecar and a 3 s limit, it finishes in 3.2 s; on pr-abort-20 the act guard keeps the model's abort, where without it the gate wasted a step and then waited on stdin.
+- brain: decider-4b on the GPU. llama-cpp-python 0.3.36 was rebuilt with CUDA 13.1 in `.venv`, and `sidecar/cuda_dlls.py` fixes the CUDA 13 `bin\x64` DLL lookup. 0.1 s per decision against 6.6 s on the CPU; dev 22/24 and probe 110/120, matching the CPU's 22/24 and 109/120.
+- player-harness, uncommitted: one shared `/v1/decision` request (15 s timeout, was 60 s), backoff after failures for the move labeller and the name reviewer, and an API key for the decision server (it was open to any local origin with no key). Measured: no key or a wrong key gets 401, the right key 200, and a foreign origin gets no CORS header. `tools/ci-check.ps1` passes.
+- Unlocks: brain's live gate survives sidecar crashes and hangs, and decider-4b is fast enough for the live loop.
+- Does not unlock: Jev itself (no code calls it), or the heldout run (brain's PREREG is still not locked).
