@@ -20,7 +20,7 @@
   100: | brain | D:\brain | Planned open-source LLM + J-lens gate + Jev decision model |
   101: | jspace-lab | D:\jspace-lab | J-lens readout, intent gate, quantum vs pseudo-random sampling test |
   102: | Self.Define | D:\self-define | Choice-driven Rust game with the QFL power system |
-  103: | Oneiro | D:\oneiro | Lucid-dreaming expression of the stack, needs a non-Muse REM trigger |
+  103: [redacted: private room, see private/ROOMS.md]
   104: | SYNOID | D:\SYNOID | Application layer, outside the core mesh |
   105: | Grand_Cross | D:\Grand_Cross | AI-driven NPC/narrative system with a Gemma DM engine |
   106: | ward | D:\dev\ward | Security monitoring tool with sequential integrity checks I0 to I7 |

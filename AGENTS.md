@@ -4,8 +4,8 @@ ATRIUM is the receiving chamber of the ecosystem: work enters here and is
 routed onward to the room that owns it. No code lives in ATRIUM itself,
 only rules, routing, and roadmap documents. The repos are the rooms.
 
-This is a multi-root workspace (DUCTEI, LIMEN, Qallow, VEYN, brain) plus one
-application: Øneiro. Agents working here act as routers, not owners:
+This is a multi-root workspace (DUCTEI, LIMEN, Qallow, VEYN, brain).
+Agents working here act as routers, not owners:
 classify the change, send it to the owning repo, respect the gates. The
 workspace mirrors the system it builds: jobs are routed the way LIMEN
 routes QUBOs, and changes travel the way DUCTEI carries envelopes.
@@ -19,7 +19,6 @@ routes QUBOs, and changes travel the way DUCTEI carries envelopes.
 | Persistence, LMDB, sync wire format, C-level enforcement, ql_persist_merge_blob() | Qallow | sync_wire.c is the conformance oracle. REM snapshot cue is GET /export on rem_detected (sleep_stage==3.0 legacy). |
 | Tracing, structured JSON logging, daemon/sensory-motor, OSC ingest | VEYN | https://github.com/xingxerx/VEYN (private). Sensory-motor bus. Intero lives in this tree. OSC 9000 owns /muse/* plus /oneiro/state and /oneiro/watch (rising-edge rem_detected). |
 | Correction store, retrieval, adapter ledger (adapt/), reasoning loop, J-lens gate | brain | Rust. `xingxerx/brain`. Spine producer for scope `brain.correction` only (ROADMAP Task 8). No networking or foreign state in brain: transport is ductei-sync, durable kernel copy is Qallow. |
-| Lucid-dreaming instrument, watch REM cue, haptic, cohort site | Øneiro | Private `xingxerx/oneiro` + `xingxerx/oneiro_website`. Commercial door. Not a mesh room. Pushes /oneiro/state and /oneiro/watch to VEYN OSC 9000. |
 
 SYNOID and Grand_Cross are outside this map. Do not route mesh work into them.
 
@@ -96,11 +95,12 @@ routed per section 1.
 | Player Harness | D:\player-harness | Game-agnostic, brain-agnostic AI embodiment runtime (Rust) |
 | jspace-lab | D:\jspace-lab | J-lens readout, intent gate, quantum vs pseudo-random sampling test |
 | Self.Define | D:\self-define | Choice-driven Rust game with the QFL power system |
-| Oneiro | D:\oneiro | Lucid-dreaming expression of the stack, needs a non-Muse REM trigger |
 | SYNOID | D:\SYNOID | Application layer, outside the core mesh |
 | Grand_Cross | D:\Grand_Cross | AI-driven NPC/narrative system with a Gemma DM engine |
 | ward | D:\dev\ward | Security monitoring tool with sequential integrity checks I0 to I7 |
 | VEYN | D:\VEYN | Core repo, but cloned outside the D:\ATRIUM folder |
+
+Private rooms are listed in private/ROOMS.md on xing-pc (gitignored, never published).
 
 brain left this table on October 26, 2026: promoted to the core mesh
 as a `brain.correction` producer (ROADMAP Task 8). It still lives at

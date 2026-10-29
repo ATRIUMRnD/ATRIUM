@@ -26,8 +26,8 @@ like every other smoke script.
 ## Unlocks / does not unlock
 
 Unlocks: "everything works as one app" becomes a demonstrated,
-regression-gated property rather than a claim. Does not unlock: the
-Øneiro charge path (owned by oneiro_website, private, outside this
+regression-gated property rather than a claim. Does not unlock: any
+commercial charge path (private, outside this
 workspace).
 
 ## Progress (September 8, 2026) - built on-box, nothing committed
@@ -68,7 +68,7 @@ local-first on QSW v1 exactly as the scope above allowed.
   limend, ductei-limen-relay, both ductei-qallow-relay hops (shared
   store) and optionally the real veyn-core daemon (mock adapter + OSC,
   DUCTEI bridge logging into the loop's root), runs the proposer
-  in-process with a persisted cursor, and can fire an Øneiro-shaped
+  in-process with a persisted cursor, and can fire a watch-shaped
   `/oneiro/watch` OSC cue (stage N2 -> REM, rising edge). Verified:
   `--once --inject` closes the loop in ~2 s (backend ibm_fez, tier 1,
   fidelity 0.933 on the offline path); `--veyn-daemon --osc-cue` closes

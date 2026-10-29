@@ -16,6 +16,9 @@
 /router-candidates-staged-*.patch
 /ROUTER-CANDIDATES-WIP-README.txt
 
+# Private rooms and commercial notes (local only, never published)
+/private/
+
 # ---------------------------------------------------------------------
 # Secrets and credentials (AGENTS.md: no hardcoded credentials, env vars only)
 # ---------------------------------------------------------------------
