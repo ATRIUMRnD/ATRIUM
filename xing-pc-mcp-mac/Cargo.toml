@@ -1,0 +1,23 @@
+[package]
+name = "xing-pc-mcp"
+version = "0.4.0"
+edition = "2021"
+description = "Remote MCP server (read by default, gated writes) for xing-pc and the Mac mini (Streamable HTTP, allowlisted roots and command presets), hardened with QFLTL"
+license = "MIT"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+tiny_http = "0.12"
+getrandom = "0.2"
+blake3 = "1"
+
+# Windows: QFLTL DPAPI keystore for the token at rest (qfltl_crypto::keystore).
+# macOS uses the login Keychain instead (see config.rs), so QFLTL is not needed there.
+[target.'cfg(windows)'.dependencies]
+qfltl-crypto = { path = "../../QFLTL/crates/core/qfltl-crypto" }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
