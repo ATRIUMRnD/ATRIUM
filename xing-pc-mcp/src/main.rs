@@ -1,6 +1,9 @@
 mod audit;
 mod config;
+mod gpu;
+mod memory;
 mod rpc;
+mod sign;
 mod tools;
 mod write;
 
@@ -56,12 +59,39 @@ fn run() -> anyhow::Result<()> {
             }
             return Ok(());
         }
+        Some("verify-memory") => {
+            let cfg = config::Config::load_or_init()?;
+            match memory::verify(&cfg) {
+                Ok(s) => println!("memory chain intact: {s}"),
+                Err(e) => {
+                    println!("MEMORY CHAIN BROKEN: {e}");
+                    std::process::exit(2);
+                }
+            }
+            return Ok(());
+        }
+        Some("memory-pubkey") => {
+            // Public by design: what another machine needs to verify this chain's signatures.
+            match sign::signer() {
+                Some(s) => println!("{{\"scheme\":\"{}\",\"kid\":\"{}\",\"public_key_hex\":\"{}\"}}", sign::SCHEME, s.kid, s.public_hex()),
+                None => println!("memory signing is off on this machine"),
+            }
+            return Ok(());
+        }
         Some("url") => {
             // Copy the connector URL to the clipboard without ever printing the token.
             let cfg = config::Config::load_or_init()?;
             let url = format!("{}/mcp/{}", cfg.public_base.trim_end_matches('/'), cfg.secret);
             copy_to_clipboard(&url)?;
             println!("read-only connector URL copied to clipboard ({}/mcp/...)", cfg.public_base);
+            return Ok(());
+        }
+        Some("gpu-key") => {
+            // The gateway's API key is the read token (or the write token for /v1/memory/add).
+            // Clipboard only, never printed.
+            let cfg = config::Config::load_or_init()?;
+            copy_to_clipboard(&cfg.secret)?;
+            println!("GPU gateway API key (read token) copied to clipboard. Base URL: {}:8444/v1", cfg.public_base.trim_end_matches('/'));
             return Ok(());
         }
         Some("enable-write") => {
@@ -103,11 +133,21 @@ fn run() -> anyhow::Result<()> {
             return Ok(());
         }
         Some(other) => {
-            anyhow::bail!("unknown command `{other}` (kill, unkill, url, write-url, enable-write, disable-write, approve, pending, verify-log, config-path)");
+            anyhow::bail!("unknown command `{other}` (kill, unkill, url, write-url, gpu-key, enable-write, disable-write, approve, pending, verify-log, verify-memory, memory-pubkey, config-path)");
         }
         _ => {}
     }
     let cfg = Arc::new(config::Config::load_or_init()?);
-    audit::record(serde_json::json!({"event": "start", "bind": cfg.bind}));
+    audit::record(serde_json::json!({"event": "start", "bind": cfg.bind, "gpu_bind": cfg.gpu.bind}));
+    // The GPU gateway runs beside the MCP server in the same process; an empty gpu.bind turns it off.
+    if !cfg.gpu.bind.trim().is_empty() {
+        let g = cfg.clone();
+        std::thread::spawn(move || {
+            if let Err(e) = gpu::serve(g) {
+                eprintln!("xing-pc-mcp gpu gateway: {e:#}");
+                audit::record(serde_json::json!({"event": "gpu_gateway_failed", "error": e.to_string()}));
+            }
+        });
+    }
     rpc::serve(cfg)
 }

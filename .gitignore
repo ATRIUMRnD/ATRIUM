@@ -8,7 +8,8 @@
 /dayroom0/
 
 # Local scratch for smoke runs (DUCTEI scripts accept --workdir target/tmp)
-/target/
+target/
+target-*/
 
 # Staging area for deploy/smoke scripts, key material copies, and WIP patches
 # (code and host-specific scripts live in the owning repos, not here)

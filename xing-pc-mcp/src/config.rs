@@ -1,3 +1,4 @@
+use crate::gpu::GpuConfig;
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fs, path::PathBuf};
 
@@ -30,6 +31,13 @@ pub struct Config {
     pub max_read_bytes: u64,
     /// Named commands. The caller picks a name, never the argv.
     pub presets: BTreeMap<String, Vec<String>>,
+    /// Folder holding the unified memory chain (memory.jsonl). Git-ignored by default.
+    #[serde(default = "default_memory_dir")]
+    pub memory_dir: PathBuf,
+    /// Unified GPU gateway (gpu.rs). All fields default, so an older config.json keeps working;
+    /// set `"gpu": {"bind": ""}` to turn the gateway off.
+    #[serde(default)]
+    pub gpu: GpuConfig,
     /// Unwrapped token, memory only.
     #[serde(skip)]
     pub secret: String,
@@ -43,6 +51,15 @@ fn default_public_base() -> String {
         "https://xing-pc.tail8b5cd4.ts.net".into()
     } else {
         "https://xings-mac-mini.tail8b5cd4.ts.net".into()
+    }
+}
+
+fn default_memory_dir() -> PathBuf {
+    if cfg!(windows) {
+        // Under ATRIUM's git-ignored /private/ folder, on D:.
+        PathBuf::from(r"D:\ATRIUM\private\memory")
+    } else {
+        home().join("dev").join(".memory")
     }
 }
 
@@ -66,7 +83,7 @@ pub fn hex(b: &[u8]) -> String {
     b.iter().map(|x| format!("{x:02x}")).collect()
 }
 
-fn unhex(s: &str) -> anyhow::Result<Vec<u8>> {
+pub fn unhex(s: &str) -> anyhow::Result<Vec<u8>> {
     if !s.len().is_multiple_of(2) {
         anyhow::bail!("odd hex length");
     }
@@ -134,6 +151,15 @@ mod keystore {
     }
 }
 
+/// Raw keystore access for other key material (sign.rs). Windows: DPAPI bytes in, blob out.
+pub fn keystore_protect(secret: &[u8]) -> anyhow::Result<Vec<u8>> {
+    keystore::protect(secret)
+}
+
+pub fn keystore_unprotect(blob: &[u8]) -> anyhow::Result<Vec<u8>> {
+    keystore::unprotect(blob)
+}
+
 fn wrap(token: &str) -> anyhow::Result<String> {
     Ok(hex(&keystore::protect(token.as_bytes())?))
 }
@@ -198,6 +224,8 @@ impl Config {
             ]),
             max_read_bytes: 256 * 1024,
             presets: default_presets(),
+            memory_dir: default_memory_dir(),
+            gpu: GpuConfig::default(),
             secret: String::new(),
             write_secret: None,
         })

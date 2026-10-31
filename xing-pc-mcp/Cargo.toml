@@ -1,8 +1,8 @@
 [package]
 name = "xing-pc-mcp"
-version = "0.4.0"
+version = "0.6.0"
 edition = "2021"
-description = "Remote MCP server (read by default, gated writes) for xing-pc and the Mac mini (Streamable HTTP, allowlisted roots and command presets), hardened with QFLTL"
+description = "Remote MCP server (read by default, gated writes, ML-DSA-65 signed unified memory store, unified GPU gateway for Ollama + InferSSD) for xing-pc and the Mac mini (Streamable HTTP, allowlisted roots and command presets), hardened with QFLTL"
 license = "MIT"
 
 [dependencies]
@@ -12,11 +12,17 @@ anyhow = "1"
 tiny_http = "0.12"
 getrandom = "0.2"
 blake3 = "1"
+# GPU gateway: plain-HTTP client to the local Ollama / InferSSD backends (127.0.0.1 only, no TLS needed).
+ureq = { version = "2", default-features = false, features = ["json"] }
 
-# Windows: QFLTL DPAPI keystore for the token at rest (qfltl_crypto::keystore).
-# macOS uses the login Keychain instead (see config.rs), so QFLTL is not needed there.
+# Windows: QFLTL DPAPI keystore for the token and the memory signing key at rest
+# (qfltl_crypto::keystore), plus ML-DSA-65 (FIPS 204) for memory entry signatures, the same
+# crates ductei-mcp uses for its receipts. macOS uses the login Keychain for the token instead
+# and keeps the memory chain unsigned for now (see sign.rs).
 [target.'cfg(windows)'.dependencies]
 qfltl-crypto = { path = "../../QFLTL/crates/core/qfltl-crypto" }
+pqcrypto-mldsa = "0.1"
+pqcrypto-traits = "0.3"
 
 [profile.release]
 opt-level = 3

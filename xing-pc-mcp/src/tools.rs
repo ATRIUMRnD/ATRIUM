@@ -1,4 +1,4 @@
-use crate::{config::Config, write};
+use crate::{config::Config, memory, write};
 use serde_json::{json, Value};
 use std::{
     fs,
@@ -13,6 +13,9 @@ const MAX_ENTRIES: usize = 500;
 const MAX_CMD_OUT: usize = 64 * 1024;
 /// Cargo test/clippy on a cold target folder routinely runs past a minute.
 const CMD_TIMEOUT: Duration = Duration::from_secs(300);
+
+/// Tools that need the write connector URL.
+const WRITE_TOOLS: [&str; 5] = ["write_file", "prepare_commit", "list_pending", "memory_add", "memory_forget"];
 
 pub fn list(writable: bool) -> Value {
     let mut v = json!([
@@ -47,6 +50,37 @@ pub fn list(writable: bool) -> Value {
                 "cwd": {"type": "string", "description": "Working folder, default the first root"}
             }, "required": ["name"]},
             "annotations": {"readOnlyHint": true}
+        },
+        {
+            "name": "memory_status",
+            "description": "Unified memory: entry counts and the list of topics in Xing's shared memory store (one store for every chat, Claude Code, the Mac and voice).",
+            "inputSchema": {"type": "object", "properties": {}},
+            "annotations": {"readOnlyHint": true}
+        },
+        {
+            "name": "memory_recent",
+            "description": "Unified memory: newest live entries first. Call this at the start of a conversation to load shared context.",
+            "inputSchema": {"type": "object", "properties": {
+                "topic": {"type": "string", "description": "Only this topic (case-insensitive), e.g. brain, limen, ductei"},
+                "limit": {"type": "integer", "description": "Max entries, default 20, max 100"}
+            }},
+            "annotations": {"readOnlyHint": true}
+        },
+        {
+            "name": "memory_search",
+            "description": "Unified memory: case-insensitive substring search over text, topic and tags of live entries, newest first.",
+            "inputSchema": {"type": "object", "properties": {
+                "query": {"type": "string"},
+                "topic": {"type": "string"},
+                "limit": {"type": "integer"}
+            }, "required": ["query"]},
+            "annotations": {"readOnlyHint": true}
+        },
+        {
+            "name": "memory_verify",
+            "description": "Unified memory: walk the hash chain and report whether the store is intact.",
+            "inputSchema": {"type": "object", "properties": {}},
+            "annotations": {"readOnlyHint": true}
         }
     ]);
     if writable {
@@ -76,19 +110,47 @@ pub fn list(writable: bool) -> Value {
                 "inputSchema": {"type": "object", "properties": {}},
                 "annotations": {"readOnlyHint": true}
             }));
+            a.push(json!({
+                "name": "memory_add",
+                "description": "Unified memory: append one entry (append-only, hash-chained). Only record what Xing stated or decided; one entry per fact.",
+                "inputSchema": {"type": "object", "properties": {
+                    "text": {"type": "string", "description": "The fact, decision, preference or status, in Xing's terms"},
+                    "topic": {"type": "string", "description": "Short slug, e.g. brain, limen, ductei, video-watch, career"},
+                    "kind": {"type": "string", "enum": ["fact", "decision", "preference", "status", "note"], "description": "Default note"},
+                    "tags": {"type": "array", "items": {"type": "string"}},
+                    "source": {"type": "string", "description": "Where it came from: chat, code, mac, voice"},
+                    "supersedes": {"type": "integer", "description": "seq of the entry this replaces (the old one stops showing)"}
+                }, "required": ["text", "topic"]}
+            }));
+            a.push(json!({
+                "name": "memory_forget",
+                "description": "Unified memory: retire an entry by seq. Appends a tombstone; the chain is never rewritten.",
+                "inputSchema": {"type": "object", "properties": {
+                    "seq": {"type": "integer"},
+                    "reason": {"type": "string"},
+                    "source": {"type": "string"}
+                }, "required": ["seq"]},
+                "annotations": {"destructiveHint": true}
+            }));
         }
     }
     v
 }
 
 pub fn call(cfg: &Config, name: &str, args: &Value, writable: bool) -> Result<String, String> {
+    if !writable && WRITE_TOOLS.contains(&name) {
+        return Err(format!("`{name}` needs the write connector URL (xing-pc-mcp enable-write)"));
+    }
     match name {
-        "write_file" | "prepare_commit" | "list_pending" if !writable => {
-            Err(format!("`{name}` needs the write connector URL (xing-pc-mcp enable-write)"))
-        }
         "write_file" => write::write_file(cfg, args),
         "prepare_commit" => write::prepare_commit(cfg, args),
         "list_pending" => Ok(json!(write::list_pending()).to_string()),
+        "memory_add" => memory::add(cfg, args),
+        "memory_forget" => memory::forget(cfg, args),
+        "memory_status" => memory::status(cfg),
+        "memory_recent" => memory::recent(cfg, args),
+        "memory_search" => memory::search(cfg, args),
+        "memory_verify" => memory::verify(cfg),
         "status" => Ok(status(cfg, writable)),
         "list_dir" => list_dir(cfg, args),
         "read_file" => read_file(cfg, args),
@@ -144,7 +206,8 @@ fn status(cfg: &Config, writable: bool) -> String {
         "kill_switch": crate::config::killed(),
         "roots": cfg.roots,
         "presets": presets,
-        "max_read_bytes": cfg.max_read_bytes
+        "max_read_bytes": cfg.max_read_bytes,
+        "memory_dir": cfg.memory_dir
     })
     .to_string()
 }
@@ -289,7 +352,8 @@ mod tests {
             "deny": [".ssh", ".secrets", ".env", "id_ed25519", "id_rsa", ".pem", ".key", ".pfx",
                      "credentials", ".xing-pc-mcp", "\\.git\\config", "/.git/config", "keychains"],
             "max_read_bytes": 1024,
-            "presets": {"echo_empty": []}
+            "presets": {"echo_empty": []},
+            "memory_dir": root.join("memory")
         }))
         .unwrap()
     }
@@ -391,12 +455,22 @@ mod tests {
     fn write_tools_refused_on_read_only_connector() {
         let d = sandbox("ro");
         let c = cfg(&d);
-        for name in ["write_file", "prepare_commit", "list_pending"] {
+        for name in WRITE_TOOLS {
             let e = call(&c, name, &json!({}), false).unwrap_err();
             assert!(e.contains("needs the write connector"), "{name}: {e}");
         }
         let names: Vec<String> = list(false).as_array().unwrap().iter().map(|t| t["name"].as_str().unwrap().to_string()).collect();
-        assert!(!names.iter().any(|n| n == "write_file"));
+        assert!(!names.iter().any(|n| n == "write_file" || n == "memory_add"));
+        assert!(names.iter().any(|n| n == "memory_recent"));
+    }
+
+    #[test]
+    fn memory_read_tools_work_on_read_only_connector() {
+        let d = sandbox("memro");
+        let c = cfg(&d);
+        assert!(call(&c, "memory_status", &json!({}), false).is_ok());
+        assert!(call(&c, "memory_verify", &json!({}), false).is_ok());
+        assert_eq!(call(&c, "memory_recent", &json!({}), false).unwrap(), "[]");
     }
 
     #[test]
