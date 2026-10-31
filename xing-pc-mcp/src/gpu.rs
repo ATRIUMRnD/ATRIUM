@@ -71,7 +71,8 @@ fn default_ollama() -> String { "http://127.0.0.1:11434".into() }
 fn default_inferssd() -> String { "http://127.0.0.1:8080".into() }
 fn default_true() -> bool { true }
 fn default_memory_hits() -> usize { 6 }
-fn default_inferssd_models() -> Vec<String> { vec!["deepseek".into(), "inferssd".into()] }
+/// Specific on purpose: Ollama also hosts deepseek-r1 / deepseek-v3.1, which must stay on Ollama.
+fn default_inferssd_models() -> Vec<String> { vec!["inferssd".into(), "deepseek-v4.1-flash".into()] }
 fn default_inferssd_start() -> Vec<String> {
     ["wsl", "-d", "Ubuntu-24.04", "--", "bash", "/mnt/d/dev/qfltl.save.home/inferssd-serve.sh"].iter().map(|s| s.to_string()).collect()
 }
@@ -544,6 +545,8 @@ mod tests {
         assert_eq!(pick(&c, "DeepSeek-V4.1-Flash"), Backend::InferSsd);
         assert_eq!(pick(&c, "inferssd"), Backend::InferSsd);
         assert_eq!(pick(&c, "qwen3:8b"), Backend::Ollama);
+        assert_eq!(pick(&c, "deepseek-r1:8b"), Backend::Ollama, "Ollama's deepseek tags must not swap the GPU");
+        assert_eq!(pick(&c, "deepseek-v3.1:671b-cloud"), Backend::Ollama);
         assert_eq!(pick(&c, ""), Backend::Ollama);
     }
 
