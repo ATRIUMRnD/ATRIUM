@@ -73,12 +73,13 @@ name = "gate-chain"
 cmd = ["D:/dev/bin/ductei-mcp-gate.exe", "verify", "D:/dev/video-watch/ductei",
        "--fingerprint", "73095f9240c66c5588523913b226baa38636c79c8cdd5fbb67e108af2a930944"]
 
+# Full nightly (A..G: DUCTEI e2e, LIMEN GPU tier 0, router gate, LIMEN IR,
+# atrium-spec drift, QHR qpu lane, qhr-sched). Exit 0 iff all pass.
 [[verify]]
-name = "ductei-e2e"
-cmd = ["C:/Users/xing/venvs/limen/Scripts/python.exe", "scripts/smoke_e2e.py",
-       "--limen", "D:/LIMEN", "--workdir", "D:/ATRIUM/ops/atrium-state/verify-e2e"]
-cwd = "D:/ATRIUM/DUCTEI"
-timeout_secs = 1200
+name = "nightly"
+cmd = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "D:/ATRIUM/ops/nightly.ps1"]
+expect_text = "ALL PASS"
+timeout_secs = 3600
 
 [[verify]]
 name = "ward-chain"
