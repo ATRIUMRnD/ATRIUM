@@ -1,0 +1,86 @@
+# atrium.toml: the one loop. Read by D:\dev\bin\atrium.exe (DUCTEI\atrium-ctl).
+#   atrium up|status|verify|down D:\ATRIUM\ops\atrium.toml
+# Rooms are checked in order every tick; managed rooms start only when their
+# `requires` are up. Every state change and a beat every `beat_every` ticks is
+# a receipt on D:\ATRIUM\ops\atrium-state\receipts.jsonl (ML-DSA-65, DPAPI key).
+
+state = "D:/ATRIUM/ops/atrium-state"
+tick_ms = 1000
+beat_every = 60
+
+[sign]
+scheme = "ml-dsa-65"
+key_store = "dpapi"
+pubkey_fingerprint = "f46ba76e8e0738457054db5a99b799f190e93a853d0d9f198af4d33dfa02b0a3"
+
+# -- external rooms: owned by scheduled tasks, atrium watches and chains them --
+
+# ward is one-shot (task reruns it every 15 min); healthy = timeline written in the last 45 min.
+[[room]]
+name = "ward"
+fresh_file = "C:/me/backup/ward/timeline.jsonl"
+fresh_secs = 2700
+
+# The node loop (pc <-> laptop heartbeats over UDP 7720). Managed here because
+# `ductei-node supervise` stops for good after 3 restarts/hour and the old
+# watchdog task could not tell (the supervise shell stays alive). Health is
+# its own status.txt, rewritten every beat.
+[[room]]
+name = "ductei-node"
+kind = "managed"
+exe = "D:/dev/ductei-node/ductei-node.exe"
+args = ["run", "--name", "pc", "--id", "1", "--listen", "100.106.147.75:7720",
+        "--peer", "laptop=100.121.3.55:7720", "--dir", "D:/dev/ductei-node/data",
+        "--html", "C:/me/www/nodes.html"]
+cwd = "D:/dev/ductei-node"
+fresh_file = "D:/dev/ductei-node/data/status.txt"
+fresh_secs = 120
+
+[[room]]
+name = "ductei-sync"
+process = "ductei-sync.exe"
+tcp = "100.106.147.75:7420"
+
+[[room]]
+name = "xing-pc-mcp"
+process = "xing-pc-mcp.exe"
+
+# -- managed rooms: atrium spawns, logs (state/logs/<name>.log) and restarts --
+
+# The closed loop: VEYN -> relay -> Qallow store -> propose -> limend -> relay.
+# Offline simulator here; IBM online runs stay with ops\atrium-online.ps1,
+# which owns the DPAPI secrets and the sleep guard.
+[[room]]
+name = "loop"
+kind = "managed"
+exe = "C:/Users/xing/venvs/limen/Scripts/python.exe"
+args = ["scripts/atrium_up.py",
+        "--root", "D:/ATRIUM/ops/atrium-state/loop",
+        "--limen", "D:/ATRIUM/LIMEN",
+        "--qallow-cli", "D:/ATRIUM/Qallow/target/debug/qallow.exe",
+        "--veyn", "D:/VEYN", "--veyn-daemon"]
+cwd = "D:/ATRIUM/DUCTEI"
+requires = ["ductei-node"]
+
+# -- verify: `atrium verify` runs these in order, chains each outcome, then verifies its own chain --
+
+[[verify]]
+name = "qhr-chain"
+cmd = ["D:/dev/bin/qhr.exe", "verify", "D:/ATRIUM/ops/logs/smoke/work-qhr/state", "--allow-unpinned"]
+
+[[verify]]
+name = "gate-chain"
+cmd = ["D:/dev/bin/ductei-mcp-gate.exe", "verify", "D:/dev/video-watch/ductei",
+       "--fingerprint", "73095f9240c66c5588523913b226baa38636c79c8cdd5fbb67e108af2a930944"]
+
+[[verify]]
+name = "ductei-e2e"
+cmd = ["C:/Users/xing/venvs/limen/Scripts/python.exe", "scripts/smoke_e2e.py",
+       "--limen", "D:/LIMEN", "--workdir", "D:/ATRIUM/ops/atrium-state/verify-e2e"]
+cwd = "D:/ATRIUM/DUCTEI"
+timeout_secs = 1200
+
+[[verify]]
+name = "ward-chain"
+cmd = ["C:/Program Files/ward/ward.exe", "verify"]
+expect_text = "[PASS] I7"

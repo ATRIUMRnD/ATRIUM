@@ -179,3 +179,6 @@ $RECYCLE.BIN/
 .Trashes
 *.kdbx
 *.seed.*
+
+# atrium supervisor state: signing key, receipts, logs
+ops/atrium-state/
