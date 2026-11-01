@@ -4,6 +4,8 @@
 #   C  ductei-router: cargo test + a gated decide (C-drive write must be denied)
 #   D  LIMEN Rust IR: cargo test in D:\LIMEN\rust + pytest tests/test_ir_bridge.py
 #   E  atrium-spec: generated Rust/C/Python match spec/atrium.toml, and generated Rust matches ductei-limen
+#   F  QHR qpu lane: qhr submit qpu.run -> limend -> cert (done), 65-var refusal never spooled, receipt chain verifies
+#   G  qhr-sched: cargo test (speculative fan-out, pool, branch weighter, prior replay from DUCTEI receipts)
 # Logs: D:\ATRIUM\ops\logs\smoke\<stamp>.log and latest.txt. Exit 0 iff all pass. Never commits.
 
 $ErrorActionPreference = 'Continue'
@@ -49,6 +51,14 @@ $r['limen_ir'] = if ($d1.code -eq 0 -and $d2.code -eq 0) { 'PASS' } else { "FAIL
 $e1 = Run 'E spec_check' { & cargo run -q --manifest-path D:\ATRIUM\DUCTEI\Cargo.toml -p atrium-spec -- check D:\ATRIUM\DUCTEI\atrium-spec\spec\atrium.toml D:\ATRIUM\DUCTEI\atrium-spec\generated }
 $e2 = Run 'E spec_tests' { & cargo test -q --manifest-path D:\ATRIUM\DUCTEI\Cargo.toml -p atrium-spec }
 $r['atrium_spec'] = if ($e1.code -eq 0 -and $e2.code -eq 0) { 'PASS' } else { "FAIL (check $($e1.code), tests $($e2.code))" }
+
+# F: QHR -> QPU lane -> limend live round trip
+$f = Run 'F qhr_qpu' { & powershell -NoProfile -ExecutionPolicy Bypass -File D:\ATRIUM\ops\qhr_qpu_probe.ps1 -Work (Join-Path $logDir 'work-qhr') }
+$r['qhr_qpu'] = if ($f.code -eq 0 -and $f.out -match 'QHR_QPU_PROBE PASS') { 'PASS' } else { "FAIL ($($f.code))" }
+
+# G: speculative scheduler + branch weighter
+$g = Run 'G qhr_sched' { & cargo test -q --manifest-path D:\ATRIUM\DUCTEI\Cargo.toml -p qhr-sched }
+$r['qhr_sched'] = if ($g.code -eq 0) { 'PASS' } else { "FAIL ($($g.code))" }
 
 $allPass = -not ($r.Values | Where-Object { $_ -notmatch '^PASS' })
 $summary = (Get-Date -Format 's') + ' | ' + (($r.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ' | ') + " | log=$log"
