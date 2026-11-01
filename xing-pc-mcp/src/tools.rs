@@ -207,7 +207,10 @@ fn status(cfg: &Config, writable: bool) -> String {
         "roots": cfg.roots,
         "presets": presets,
         "max_read_bytes": cfg.max_read_bytes,
-        "memory_dir": cfg.memory_dir
+        "memory_dir": cfg.memory_dir,
+        // Set when the server had to rotate its tokens after a keystore reset. If this is
+        // present the links in claude.ai Connectors are stale: `xing-pc-mcp url` / `write-url`.
+        "healed": Config::healed().and_then(|s| serde_json::from_str::<Value>(&s).ok())
     })
     .to_string()
 }

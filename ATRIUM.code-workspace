@@ -13,5 +13,20 @@
 			"path": "../jspace-lab"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.exclude": {
+			"**/target": true,
+			"**/target-*": true,
+			"**/__pycache__": true,
+			"**/.pytest_cache": true,
+			"**/.mypy_cache": true,
+			"**/.ruff_cache": true
+		},
+		"search.exclude": {
+			"**/target": true,
+			"**/target-*": true,
+			"**/.venv": true,
+			"**/__pycache__": true
+		}
+	}
 }

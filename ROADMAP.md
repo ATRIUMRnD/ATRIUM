@@ -303,3 +303,43 @@ and the loop now exercises it nightly. Verified on the RTX 5080.
 - QFLTL: shared sender engine `qfltl-core/src/repair.rs` (pacing, mid-transfer rate feedback from receiver PROGRESS reports every 25 ms, NACK repair, END_OK verified completion), used by both `shred` and the Mission Control GUI. The GUI used to report "Mission Success" with no confirmation at all; it now repairs and only succeeds on a verified ack. A sender that gets END_ACK without END_OK (older receiver) reports NOT VERIFIED. Relay tests on xing-pc: 400/s Wi-Fi-like link, 10 MB in 22.3 s (link limit 21.8 s, previous build 38 s); 3000/s with 1% loss, 20 MB in 6.5 s with first-pass loss 8.5% (was 97.6%, resends 1,498 vs 17,530). 85 core + 59 crypto tests pass. Laptop rerun pending (laptop offline on Tailscale this morning).
 - Øneiro: `phase_sync` gains `panel` (private night panel, binds the Tailscale IP only, refuses non-tailnet peers, reads VEYN's event log read-only) and `cue_qubo` (cue timing as a QUBO from Watch heart rate; exact Gray-code solver, annealing, LIMEN offline request). 13-variable run: exact = annealing = -27.87; LIMEN simulator p=1 QAOA +39.30 with gap violations. Data window was mostly awake (median HR 93), so it validates the pipeline, not the cue times.
 - Øneiro website: `website/waitlist.html` (Watch-first product page with waitlist form, no health claims, not deployed; form endpoint empty so it stores nothing).
+## Status update (October 31, 2026, late)
+
+Harness tightening pass (working folders only, nothing committed):
+
+- Root cause of tonight's mass sign-out and of three broken services: the DPAPI master key {91ae3965-5ca7-4ce8-8f18-66c7e8dea4ae} can no longer be opened (Crypto-DPAPI event 8198/8203 "Could not get the master key"). Every secret wrapped before tonight is unreadable: ductei-sync QFLTL identity (D:\brain\adapt\data\sync\qfltl\identity.seed.dpapi), video-watch gate signing key and anchor identity (D:\dev\video-watch\ductei\*.dpapi), xing-pc-mcp bearer tokens (config token_dpapi). Rotation is a cross-machine decision (laptop pins), left to Xing.
+- ductei-router: T0 brain host now follows DUCTEI_T0_HOST / OLLAMA_HOST and must be an address of this machine (was hardcoded 127.0.0.1 while OLLAMA_HOST points at the Tailscale IP, so T0 silently fell back). classify now returns {task, brain, fallback}; fallback is criticality 3 and visible. One shared decide() for CLI, MCP and hook. canon.toml (roots, extra denied drives; C can never be unbanned) and sign.toml in the state dir. Receipts are now ML-DSA-65 signed (DPAPI key, fingerprint pinned), chain continued from the old unsigned receipts. New verify subcommand.
+- New ductei-hook (Claude Code PreToolUse): Write/Edit/Bash mapped to effects, C: writes deny, commit/push/delete ask, approvals via D:\dev\ductei-router-state\approvals.txt. Registered in ~/.claude/settings.json; router MCP re-registered to the signed release build.
+- Ops: Ollama logon task (ollama-serve); xing-pc-mcp task started (Funnel answers again, 401 = auth); nightly consolidated: limen-ductei-nightly-smoke now runs D:\ATRIUM\ops\nightly.ps1, limen-nightly-smoke disabled (not deleted), tier0_probe.py copied to D:\ATRIUM\ops. Task XML backups in D:\ATRIUM\ops\logs.
+- Open: DUCTEI feat/ductei-router local branch diverged from origin (28 ahead / 16 behind, rebased history); laptop offline so its loop node is unverified; Ollama app currently listens on :: (firewall rules scope it), the logon task will bind the Tailscale IP only.
+
+## Status update (November 1, 2026): QHR fast lane
+
+- ductei-mcp receipts gained a durability knob (`log.sync_every` / `log.sync_max_ms`; default = fsync every receipt, the verified tier).
+- Bench on xing-pc (release, 2000 iterations): per-receipt fsync p50 0.52 ms / p99 0.99 ms; batched p50 0.002 ms; ML-DSA-65 sign p50 0.39 ms, verify p50 0.12 ms.
+- Anchors now fsync before asserting a head; gate flushes at exit.
+- ductei-router: receipt-log loader no longer spins on a repeating read error (filter_map -> map_while).
+- Lint-clean: ductei-mcp, ductei-core, ductei-qallow, ductei-router. Uncommitted.
+- ductei-mcp: optional background fsync thread for the fast lane (log.sync_background); QHR fast tier p99 0.55-0.75 ms -> 0.19 ms (p50 0.10 ms, floor 0.06 ms). New crate ductei-qhr: gated, deadline-bound local job plane with predicted-miss pre-flight; 11 tests.
+
+## 2026-11-01 QHR lane weighting (uncommitted, D:\ATRIUM\DUCTEI\ductei-qhr)
+- Weighter trait (uniform | evidence | jlens flagged off) scores pre-flight survivors; pick_why bound into receipt hash.
+- ductei-qhr: 22 tests pass (11 core, 4 qpu, 7 weight), clippy clean; workspace green.
+- Bench (release, xing-pc): fast-bg submit p50 0.110 ms p99 0.229 ms; verified p50 1.036 ms (USB fsync floor). No regression from the candidate scan.
+- Next: run jspace-lab readout PREREG; flip jlens on only if it passes.
+
+## Status update (November 1, 2026, early morning): timeline branch, rotation, self-heal
+
+Everything above is now committed. Branch of record: `timeline` (DUCTEI merged feat/ductei-router into it, player-harness cut it from main, ATRIUM already on it).
+
+- DUCTEI router MCP is extensible (`ToolExt`); `qhr serve` runs one stdio server with decide / classify / outcome / qhr_submit / qhr_verify. Smoke over stdio: cpu.sha256 job done in 938 us with a receipt; decide allowed a private read.
+- Rotation after the DPAPI master-key loss (all in-stack, old material kept in `retired-20261101` folders next to the live dirs):
+  - ductei-sync identity: new, fingerprint 6e1862bf38dfc10b5a5435f80ad04a10f74033d388bd2672f09723e07e9c39c6. Laptop must re-pin (`ductei-sync key-pin <laptop state> --role server --peer <xing-pc addr>:7420 --file identity.pub --replace`, and as client). Laptop offline at the time.
+  - video-watch gate: new ML-DSA-65 key 73095f9240c66c5588523913b226baa38636c79c8cdd5fbb67e108af2a930944, pinned in ductei-mcp.toml; fresh chain. Old chain verifies with retired pk but already had prev-hash mismatches at seq 22148 and 74205 (pre-existing). Anchor-state identity regenerated; anchor peers must re-pin it.
+  - xing-pc-mcp tokens: rotated Oct 31, connector links pasted by Xing.
+  - GitHub credentials on xing-pc were also DPAPI-backed and are gone: `gh auth login -h github.com -w` needed before xing-pc can push. player-harness timeline was pushed from the cloud session; DUCTEI and ATRIUM pushes wait on auth (ATRIUMRnD org has no Claude GitHub App).
+- Bug found and fixed: ductei-mcp-gate `restrict_acl` applied (OI)(CI) grants with /T, which on files is inherit-only and left every log file with an empty ACL. Now restricts the dir and resets children. The gate dir had been owned by Administrators (icacls could not touch it); recreated as xing-owned.
+- xing-pc-mcp self-heal: an unreadable keystore token no longer kills the server; it rotates the failed token(s), saves, writes `healed.json` (no secrets) and `status` reports it; `heal-status` / `heal-ack` CLI. Tested against dead blobs: heals once, second load clean.
+- player-harness moved to D:\dev\player-harness; xing-pc-mcp default roots are now D:\dev and D:\ATRIUM.
+- Parked for the Mac mini: Oneiro cue timing fixes from the Oct 20-31 sleep comparison (HR gate treats REM as awake; cue 3-5 min after first REM detect; cap ramp at level 5).
+- Still pending: qhr-cell / qhr-sched patch (built in a cloud session, file not on xing-pc; needs the .patch attached), MCP registration of `qhr serve` in Claude Code (C: file, Xing's call).

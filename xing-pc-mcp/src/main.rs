@@ -84,6 +84,21 @@ fn run() -> anyhow::Result<()> {
             let url = format!("{}/mcp/{}", cfg.public_base.trim_end_matches('/'), cfg.secret);
             copy_to_clipboard(&url)?;
             println!("read-only connector URL copied to clipboard ({}/mcp/...)", cfg.public_base);
+            if config::Config::healed().is_some() {
+                println!("note: tokens were rotated after a keystore reset (healed.json); paste this link into claude.ai Connectors, then run `xing-pc-mcp heal-ack`");
+            }
+            return Ok(());
+        }
+        Some("heal-status") => {
+            match config::Config::healed() {
+                Some(s) => println!("{s}"),
+                None => println!("no self-heal pending"),
+            }
+            return Ok(());
+        }
+        Some("heal-ack") => {
+            config::Config::heal_ack()?;
+            println!("healed.json cleared");
             return Ok(());
         }
         Some("gpu-key") => {

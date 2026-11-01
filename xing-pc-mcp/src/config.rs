@@ -199,11 +199,8 @@ fn default_presets() -> BTreeMap<String, Vec<String>> {
 fn default_roots() -> Vec<PathBuf> {
     if cfg!(windows) {
         // D: only. The C drive stays out of the connector.
-        vec![
-            PathBuf::from(r"D:\dev"),
-            PathBuf::from(r"D:\ATRIUM"),
-            PathBuf::from(r"D:\player-harness"),
-        ]
+        // player-harness lives under D:\dev\player-harness, covered by D:\dev.
+        vec![PathBuf::from(r"D:\dev"), PathBuf::from(r"D:\ATRIUM")]
     } else {
         vec![home().join("dev")]
     }
@@ -264,11 +261,57 @@ impl Config {
             .token_dpapi
             .as_deref()
             .ok_or_else(|| anyhow::anyhow!("config has no token_dpapi"))?;
-        cfg.secret = unwrap_token(wrapped)?;
+        // Self-heal: a keystore reset (Windows DPAPI master key rotated by a password
+        // reset or profile repair, macOS keychain wiped) leaves the wrapped tokens
+        // unreadable and every restart would fail the same way. Instead of dying,
+        // rotate exactly the tokens that failed, save, and leave a marker. The old
+        // connector URLs stop working, which is the correct outcome: the secrets that
+        // were protected by the dead key are gone, not leaked.
+        let mut healed: Vec<String> = Vec::new();
+        cfg.secret = match unwrap_token(wrapped) {
+            Ok(s) => s,
+            Err(e) => {
+                healed.push(format!("read token: {e}"));
+                let t = new_token()?;
+                cfg.token_dpapi = Some(wrap(&t)?);
+                t
+            }
+        };
         if let Some(w) = cfg.write_token_dpapi.as_deref() {
-            cfg.write_secret = Some(unwrap_token(w)?);
+            cfg.write_secret = Some(match unwrap_token(w) {
+                Ok(s) => s,
+                Err(e) => {
+                    healed.push(format!("write token: {e}"));
+                    let t = new_token()?;
+                    cfg.write_token_dpapi = Some(wrap(&t)?);
+                    t
+                }
+            });
+        }
+        if !healed.is_empty() {
+            cfg.save()?;
+            let note = serde_json::json!({
+                "at": std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0),
+                "reason": healed,
+                "next": "run `xing-pc-mcp url` and `xing-pc-mcp write-url`, paste the new links into claude.ai Connectors",
+            });
+            fs::write(d.join("healed.json"), serde_json::to_string_pretty(&note)?)?;
+            eprintln!("xing-pc-mcp: keystore could not unwrap {} token(s); rotated them and wrote healed.json. Old connector links are dead; run `xing-pc-mcp url` / `write-url` for the new ones.", healed.len());
         }
         Ok(cfg)
+    }
+
+    /// True when the last load had to rotate tokens. Cleared by `heal_ack`.
+    pub fn healed() -> Option<String> {
+        fs::read_to_string(dir().join("healed.json")).ok()
+    }
+
+    pub fn heal_ack() -> anyhow::Result<()> {
+        let f = dir().join("healed.json");
+        if f.exists() {
+            fs::remove_file(f)?;
+        }
+        Ok(())
     }
 
     fn save(&self) -> anyhow::Result<()> {
