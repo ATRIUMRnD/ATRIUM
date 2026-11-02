@@ -343,3 +343,32 @@ Everything above is now committed. Branch of record: `timeline` (DUCTEI merged f
 - player-harness moved to D:\dev\player-harness; xing-pc-mcp default roots are now D:\dev and D:\ATRIUM.
 - Parked for the Mac mini: Oneiro cue timing fixes from the Oct 20-31 sleep comparison (HR gate treats REM as awake; cue 3-5 min after first REM detect; cap ramp at level 5).
 - Still pending: qhr-cell / qhr-sched patch (built in a cloud session, file not on xing-pc; needs the .patch attached), MCP registration of `qhr serve` in Claude Code (C: file, Xing's call).
+
+## 2026-11-01 05:42 status: QHR branch weighter + QPU lane in nightly
+- qhr-sched/src/weight.rs (new): BranchWeighter (Uniform, Prior, flagged JLens), Scheduler::superpose_weighted, Prior::replay rebuilds the learned prior from DUCTEI receipts after verifying the chain (tampered or wrong-genesis chains teach nothing). BranchReceipt gains optional class (skipped when None, old receipt hashes unchanged). qhr-sched 27/27, clippy clean.
+- ops/qhr_qpu_probe.ps1 (new): qhr submit qpu.run -> limend -> cert, 257 to 504 ms wall on CPU statevector; 65-var job refused in pre-flight, never spooled; receipt chain verifies.
+- ops/nightly.ps1: steps F (qhr_qpu) and G (qhr_sched) added. Full run ALL PASS (7/7).
+- Caveat: 4-var p=1 QAOA put 0.178 on the optimum (target 0.9). The probe gates on the lane contract, not QAOA quality.
+- Uncommitted. J-lens stays off until jspace-lab PREREG passes.
+
+## 2026-11-01 06:16 status: QPU lane cache, prefetch, exact check
+- ductei-qhr/src/qpu.rs: offline-result cache (spool/qhr-cache, sha256 over the request minus job_id, terms sorted), prefetch (spools under prefetch-<key16>, next run adopts the cert), exact check (Rust brute force up to 16 vars: exact_energy, exact_assignment) and shots_to_optimum_99 from limend's success_probability. CertSummary unchanged. Hardware (non-offline) requests never cached.
+- qhr prefetch --spool <dir> --request <file> (new CLI).
+- Live vs real limend: miss 241 ms, hit 2.2 ms inside QHR incl. gate and receipt (14 ms wall with process start). Star QUBO exact optimum -3 (hub=0, leaves=1); p=0.178 means 24 shots find it at 99%.
+- Tests: ductei-qhr qpu 10 (6 new), workspace 170 pass, clippy clean, nightly ALL PASS 7/7 (F now checks exact + cache hit).
+- Limit: lane health() still checks the limend backlog before preflight, so a cache hit is refused if limend is down. Uncommitted.
+
+
+## Status update (November 1, 2026): atrium, one loop
+
+- New crate `DUCTEI/atrium-ctl` (binary `atrium`, installed at `D:\dev\bin\atrium.exe`): `up | status | verify | down` over `D:\ATRIUM\ops\atrium.toml`. 6/6 tests, clippy clean.
+- Rooms: ward (timeline freshness), ductei-node (managed, replaces the disabled `ductei-node-watchdog` task), ductei-sync, xing-pc-mcp, loop (`atrium_up.py`, managed, offline simulator). All five up live.
+- One chain: every room state change plus a beat per 60 ticks is a receipt on `ops\atrium-state\receipts.jsonl`, ML-DSA-65, DPAPI key, pinned fingerprint `f46ba76e...b0a3`. Reuses `ductei_mcp::ReceiptLog`.
+- `atrium verify`: qhr chain, gate chain (5621 receipts), ductei e2e smoke, ward I0..I7, own chain. 5/5 PASS.
+- Proven live: killed ductei-node, back in under 6s; second `up` and live `verify` refuse (75).
+- Root cause found: `ductei-node supervise` stops for good after 3 restarts/hour and its shell stays alive, so the old watchdog reported healthy while the node was dead since 02:24.
+- Task `atrium` registered at logon. Open: anchor the atrium chain to an off-box peer (laptop offline 3 days); nightly still runs separately because verify needs the supervisor down.
+
+- Later Nov 1: nightly folded into atrium. Task `limen-ductei-nightly-smoke` now runs `ops\atrium-nightly.ps1`: down, verify (qhr, gate, nightly A..G, ward, atrium chain), up via task `atrium`. Real task run 07:41: 5/5, task result 0, nightly 7/7 in 3 min.
+- Bugs found and fixed: (0) `atrium down` left `atrium_up.py`'s children running; 28 orphans from four loop copies shared one LMDB store. Managed rooms now live in kill-on-close Job Objects (tests: grandchild dies on shutdown and on supervisor drop). (1) The wrapper hung because the background supervisor inherited its stdout pipe; it now starts through the task. (2) Gate verify had a read-order race on a live gate (2/15 false failures); receipts are now counted before the channel is read, 0/15. (3) Gate verify matched channel entries by hash anywhere, so deleting a repeated entry (12 distinct calls over 6,466 polls) went unseen; it now checks the entry at the receipt's own Lamport stamp (new test, 36/36).
+- The live video-watch gate runs from `DUCTEI\target\release`, which locks that build path; installs now build into `target\bin-install`.
