@@ -46,6 +46,20 @@ cwd = "D:/dev/ductei-node"
 fresh_file = "D:/dev/ductei-node/data/status.txt"
 fresh_secs = 120
 
+# Link detector: TCP probes every 5 s to the laptop (peer), the router (lan)
+# and 1.1.1.1 (wan). events.jsonl says which link dropped: peer, lan or wan.
+[[room]]
+name = "keepalive"
+kind = "managed"
+exe = "D:/dev/bin/atrium-keepalive.exe"
+args = ["--dir", "D:/ATRIUM/ops/atrium-state/keepalive", "--every", "5",
+        "--target", "peer:laptop=100.121.3.55:22",
+        "--target", "lan:router=192.168.1.1:80",
+        "--target", "wan:cloudflare=1.1.1.1:443"]
+cwd = "D:/ATRIUM/ops"
+fresh_file = "D:/ATRIUM/ops/atrium-state/keepalive/status.json"
+fresh_secs = 60
+
 [[room]]
 name = "ductei-sync"
 process = "ductei-sync.exe"
