@@ -196,6 +196,23 @@ fn default_presets() -> BTreeMap<String, Vec<String>> {
     p
 }
 
+/// Unwrap with retries before treating the keystore as dead. At boot, a task can
+/// start before the user profile (and its DPAPI master key) is loaded; a single
+/// failure there must not rotate the tokens and kill the connector links.
+fn unwrap_retry(wrapped: &str) -> anyhow::Result<String> {
+    let mut last = None;
+    for wait_ms in [0u64, 500, 1500, 4000, 10000] {
+        if wait_ms > 0 {
+            std::thread::sleep(std::time::Duration::from_millis(wait_ms));
+        }
+        match unwrap_token(wrapped) {
+            Ok(s) => return Ok(s),
+            Err(e) => last = Some(e),
+        }
+    }
+    Err(last.unwrap_or_else(|| anyhow::anyhow!("unwrap failed")))
+}
+
 fn default_roots() -> Vec<PathBuf> {
     if cfg!(windows) {
         // D: only. The C drive stays out of the connector.
@@ -268,7 +285,7 @@ impl Config {
         // connector URLs stop working, which is the correct outcome: the secrets that
         // were protected by the dead key are gone, not leaked.
         let mut healed: Vec<String> = Vec::new();
-        cfg.secret = match unwrap_token(wrapped) {
+        cfg.secret = match unwrap_retry(wrapped) {
             Ok(s) => s,
             Err(e) => {
                 healed.push(format!("read token: {e}"));
@@ -278,7 +295,7 @@ impl Config {
             }
         };
         if let Some(w) = cfg.write_token_dpapi.as_deref() {
-            cfg.write_secret = Some(match unwrap_token(w) {
+            cfg.write_secret = Some(match unwrap_retry(w) {
                 Ok(s) => s,
                 Err(e) => {
                     healed.push(format!("write token: {e}"));
