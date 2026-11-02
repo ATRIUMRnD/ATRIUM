@@ -7,6 +7,16 @@
 state = "D:/ATRIUM/ops/atrium-state"
 tick_ms = 1000
 beat_every = 60
+# Peer anchor exports the own-chain check must agree with (fetched by the
+# "fetch-laptop-anchors" verify step below).
+anchor_files = ["D:/ATRIUM/ops/atrium-state/peer-anchors/laptop-accepted.jsonl"]
+
+# Chain-head anchors: every 60 receipts the head is signed and pushed to the
+# laptop over QFLTL (ML-KEM-768 + AES-256-GCM, mutual pin). Never plaintext.
+[anchor]
+every = 60
+peers = ["100.121.3.55:7421"]
+encrypt = true
 
 [sign]
 scheme = "ml-dsa-65"
@@ -68,10 +78,18 @@ requires = ["ductei-node"]
 name = "qhr-chain"
 cmd = ["D:/dev/bin/qhr.exe", "verify", "D:/ATRIUM/ops/logs/smoke/work-qhr/state", "--allow-unpinned"]
 
+# Pull the laptop's anchor log (read only) first, so gate-chain and atrium-chain
+# can both catch a cut tail.
+[[verify]]
+name = "fetch-laptop-anchors"
+cmd = ["C:/Windows/System32/OpenSSH/scp.exe", "-q", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", "-i", "C:/Users/xing/.ssh/id_ed25519_laptop", "there@100.121.3.55:C:/Users/there/anchor-peer/inbound/accepted.jsonl", "D:/ATRIUM/ops/atrium-state/peer-anchors/laptop-accepted.jsonl"]
+timeout_secs = 30
+
 [[verify]]
 name = "gate-chain"
 cmd = ["D:/dev/bin/ductei-mcp-gate.exe", "verify", "D:/dev/video-watch/ductei",
-       "--fingerprint", "73095f9240c66c5588523913b226baa38636c79c8cdd5fbb67e108af2a930944"]
+       "--fingerprint", "73095f9240c66c5588523913b226baa38636c79c8cdd5fbb67e108af2a930944",
+       "--anchor-file", "D:/ATRIUM/ops/atrium-state/peer-anchors/laptop-accepted.jsonl"]
 
 # Full nightly (A..G: DUCTEI e2e, LIMEN GPU tier 0, router gate, LIMEN IR,
 # atrium-spec drift, QHR qpu lane, qhr-sched). Exit 0 iff all pass.
@@ -85,3 +103,4 @@ timeout_secs = 3600
 name = "ward-chain"
 cmd = ["C:/Program Files/ward/ward.exe", "verify"]
 expect_text = "[PASS] I7"
+

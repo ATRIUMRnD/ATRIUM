@@ -35,12 +35,11 @@ $n = @($Up, $Status, $Verify, $Down) | Where-Object { $_ } | Measure-Object | Se
 if ($n -ne 1) { Write-Error "[atrium] pick exactly one of -Up -Status -Verify -Down (or -Build)"; exit 64 }
 
 if ($Up -and $Background) {
-    $state = (Select-String -Path $Config -Pattern '^\s*state\s*=\s*"([^"]+)"').Matches[0].Groups[1].Value
-    New-Item -ItemType Directory -Force (Join-Path $state 'logs') | Out-Null
-    $log = Join-Path $state 'logs\atrium-stdout.log'
-    $p = Start-Process -FilePath $Exe -ArgumentList @('up', $Config) -WindowStyle Hidden -PassThru `
-        -RedirectStandardOutput $log -RedirectStandardError (Join-Path $state 'logs\atrium-stderr.log')
-    Write-Host "[atrium] supervisor started in background, pid $($p.Id); log $log"
+    # Run through the atrium scheduled task so the supervisor belongs to no terminal
+    # (a hidden child of this shell dies when Windows Terminal closes the window).
+    Start-ScheduledTask -TaskName atrium
+    Start-Sleep -Seconds 3
+    & $Exe status $Config
     exit 0
 }
 
