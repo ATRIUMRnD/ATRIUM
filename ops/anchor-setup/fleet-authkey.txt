@@ -1,0 +1,1 @@
+command="/Users/xingxerx/dev/atrium-anchor/fleet-cmd.sh",no-pty,no-port-forwarding,no-agent-forwarding,no-X11-forwarding,restrict ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICwLg0tS3HOsiPhkekHXFoggb2aWdqBmL3iNmJFFvd84 atrium-fleet@xing-pc

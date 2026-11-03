@@ -182,3 +182,7 @@ $RECYCLE.BIN/
 
 # atrium supervisor state: signing key, receipts, logs
 ops/atrium-state/
+
+# security scan output: local only, may name weaknesses
+ops/security/triage-report.txt
+ops/security/*.log
