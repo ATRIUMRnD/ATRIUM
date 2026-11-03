@@ -9,13 +9,13 @@ tick_ms = 1000
 beat_every = 60
 # Peer anchor exports the own-chain check must agree with (fetched by the
 # "fetch-laptop-anchors" verify step below).
-anchor_files = ["D:/ATRIUM/ops/atrium-state/peer-anchors/laptop-accepted.jsonl"]
+anchor_files = ["D:/ATRIUM/ops/atrium-state/peer-anchors/laptop-accepted.jsonl", "D:/ATRIUM/ops/atrium-state/peer-anchors/mini-accepted.jsonl"]
 
 # Chain-head anchors: every 60 receipts the head is signed and pushed to the
 # laptop over QFLTL (ML-KEM-768 + AES-256-GCM, mutual pin). Never plaintext.
 [anchor]
-every = 60
-peers = ["100.121.3.55:7421"]
+every = 1
+peers = ["100.111.252.86:7421", "100.121.3.55:7421"]
 encrypt = true
 
 [sign]
@@ -118,3 +118,26 @@ name = "ward-chain"
 cmd = ["C:/Program Files/ward/ward.exe", "verify"]
 expect_text = "[PASS] I7"
 
+[[verify]]
+name = "fetch-mini-anchors"
+cmd = ["C:/Windows/System32/OpenSSH/scp.exe", "-q", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", "-i", "C:/Users/xing/.ssh/id_ed25519_mac", "xingxerx@100.111.252.86:dev/atrium-anchor/state/inbound/accepted.jsonl", "D:/ATRIUM/ops/atrium-state/peer-anchors/mini-accepted.jsonl"]
+timeout_secs = 30
+
+# -- fleet: phone control (atrium fleet <config> <verb>); Claude presets and the Telegram bot call this --
+[fleet]
+dir = "D:/ATRIUM/ops/atrium-state/fleet"
+telegram_env = "D:/ATRIUM/ops/atrium-state/fleet/telegram.env"
+
+[[fleet.machine]]
+name = "mini"
+host = "100.111.252.86"
+ssh = "xingxerx@100.111.252.86"
+key = "D:/ATRIUM/ops/atrium-state/fleet/keys/id_ed25519_fleet"
+mac = "1c:f6:4c:6e:c3:a3"
+broadcast = "192.168.1.255"
+
+[[fleet.machine]]
+name = "laptop"
+host = "100.121.3.55"
+ssh = "there@100.121.3.55"
+key = "D:/ATRIUM/ops/atrium-state/fleet/keys/id_ed25519_fleet"
