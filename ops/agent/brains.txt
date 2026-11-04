@@ -1,0 +1,3 @@
+# ATRIUM ops brain chain, tried top to bottom (written by brains-setup.ps1)
+lmstudio|http://127.0.0.1:1234|atrium-ops|google/gemma-4-12b-qat
+ollama|http://100.106.147.75:11434|gpt-oss:20b

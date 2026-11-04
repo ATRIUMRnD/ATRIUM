@@ -177,6 +177,13 @@ fn default_presets() -> BTreeMap<String, Vec<String>> {
     p.insert("git_diff_stat".into(), strs(&["git", "diff", "--stat"]));
     if cfg!(windows) {
         p.insert("nvidia_smi".into(), strs(&["nvidia-smi"]));
+        // LIMEN on CUDA: the nightly's tier-0 probe (24-var QUBO, Aer GPU statevector in WSL).
+        // Fixed size and script; the caller cannot pass arguments.
+        p.insert(
+            "limen_gpu_tier0".into(),
+            strs(&["wsl", "-d", "Ubuntu-24.04", "--", "bash", "-c",
+                   "cd /mnt/d/ATRIUM/LIMEN && LIMEN_LOCAL_GPU=1 ~/limen-venv/bin/python /mnt/d/ATRIUM/ops/tier0_probe.py 24 2>&1"]),
+        );
     } else {
         p.insert("sw_vers".into(), strs(&["sw_vers"]));
     }
@@ -193,6 +200,16 @@ fn default_presets() -> BTreeMap<String, Vec<String>> {
         "cargo_test".into(),
         strs(&["cargo", "test", "--no-fail-fast", "--color", "never"]),
     );
+    // Single-package tests. Inside a workspace, plain cargo_test tests every member
+    // (including slow or hung ones); these stay scoped. Run with cwd = the workspace.
+    for (preset, pkg) in [
+        ("cargo_test_watch", "atrium-watch"),
+        ("cargo_test_agent", "ductei-agent"),
+        ("cargo_test_ctl", "atrium-ctl"),
+        ("cargo_test_mcp_gate", "ductei-mcp"),
+    ] {
+        p.insert(preset.into(), strs(&["cargo", "test", "-p", pkg, "--no-fail-fast", "--color", "never"]));
+    }
     p
 }
 

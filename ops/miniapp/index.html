@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'">
+<title>ATRIUM</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:monospace;color:#0F0}
+canvas{position:fixed;inset:0;display:block}
+.panel{position:relative;z-index:1;margin:16px;padding:14px 16px;background:rgba(0,0,0,.72);border:1px solid #00ff0055;border-radius:10px}
+h1{margin:0 0 10px;font-size:20px;letter-spacing:4px}
+.cmd{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px solid #00ff0022;font-size:14px}
+.cmd b{white-space:nowrap}.cmd span{opacity:.8;text-align:right}
+</style></head><body>
+<canvas id="rain"></canvas>
+<div class="panel"><h1>ATRIUM</h1><div id="list"></div></div>
+<script>
+// Same list as BOT_COMMANDS in atrium-ctl/src/fleet.rs. Display only: no token, no network calls.
+const CMDS=[["/status","all machines"],["/alarms","tamper alarms"],["/wake mini|laptop","wake a machine"],["/up","start atrium"],["/down yes","stop atrium"],["/restart fleet-bot yes","restart a room"],["/restart_anchor mini yes","restart an anchor"],["/help","every command"]];
+const list=document.getElementById('list');
+for(const [c,d] of CMDS){const r=document.createElement('div');r.className='cmd';const b=document.createElement('b');b.textContent=c;const s=document.createElement('span');s.textContent=d;r.append(b,s);list.append(r);}
+const tg=window.Telegram&&Telegram.WebApp; if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#000000');tg.setBackgroundColor('#000000');}catch(e){}}
+
+// Identical to xing-pc's Wallpaper Engine matrixrain.html (workshop 3595567946):
+// '01', 16px, trail alpha 0.05, pure #0F0, fixed 24 rows/s (film speed).
+(() => {
+  'use strict';
+  const CHARACTERS='01', FONT_SIZE=16, TRAIL_ALPHA=0.05, DROP_RESET_PROBABILITY=0.975;
+  const FILM_ROWS_PER_SEC=24, MAX_STEPS_PER_FRAME=4;
+  const canvas=document.getElementById('rain'), ctx=canvas.getContext('2d');
+  let drops=[], acc=0, last=null;
+  const setup=()=>{canvas.width=innerWidth;canvas.height=innerHeight;
+    drops=new Array(Math.floor(canvas.width/FONT_SIZE)).fill(1);
+    ctx.fillStyle='#000';ctx.fillRect(0,0,canvas.width,canvas.height);};
+  const step=()=>{ctx.fillStyle=`rgba(0, 0, 0, ${TRAIL_ALPHA})`;ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#0F0';ctx.font=`${FONT_SIZE}px monospace`;
+    for(let i=0;i<drops.length;i++){ctx.fillText(CHARACTERS.charAt(Math.floor(Math.random()*CHARACTERS.length)),i*FONT_SIZE,drops[i]*FONT_SIZE);
+      if(drops[i]*FONT_SIZE>canvas.height&&Math.random()>DROP_RESET_PROBABILITY)drops[i]=0;drops[i]++;}};
+  const frame=(t)=>{if(last===null)last=t;acc+=(t-last)/1000;last=t;const s=1/FILM_ROWS_PER_SEC;let n=0;
+    while(acc>=s&&n<MAX_STEPS_PER_FRAME){step();acc-=s;n++;}if(n===MAX_STEPS_PER_FRAME)acc=0;requestAnimationFrame(frame);};
+  addEventListener('resize',setup);setup();requestAnimationFrame(frame);
+})();
+</script></body></html>

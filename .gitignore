@@ -186,3 +186,12 @@ ops/atrium-state/
 # security scan output: local only, may name weaknesses
 ops/security/triage-report.txt
 ops/security/*.log
+
+# Suffixed backups (foo.bak-2026..., foo.bak.txt) that *.bak misses
+*.bak-*
+*.bak.*
+
+# Local scratch diffs/status dumps and version backups in ops/
+ops/*.diff
+ops/qfltl-*.txt
+/.backup-*/

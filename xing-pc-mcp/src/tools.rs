@@ -291,6 +291,16 @@ fn read_file(cfg: &Config, args: &Value) -> Result<String, String> {
 }
 
 fn run_preset(cfg: &Config, args: &Value) -> Result<String, String> {
+    run_preset_for(cfg, args, CMD_TIMEOUT)
+}
+
+/// Detached jobs (the `run-preset` CLI) hold no connection open, so they get a longer cap.
+pub const DETACHED_TIMEOUT: Duration = Duration::from_secs(30 * 60);
+
+pub fn run_preset_for(cfg: &Config, args: &Value, timeout: Duration) -> Result<String, String> {
+    if crate::config::killed() {
+        return Err("kill switch is on; preset refused".into());
+    }
     let name = arg(args, "name")?;
     let argv = cfg.presets.get(name).ok_or_else(|| format!("no preset `{name}`"))?;
     if argv.is_empty() || argv[0].trim().is_empty() {
@@ -300,7 +310,8 @@ fn run_preset(cfg: &Config, args: &Value) -> Result<String, String> {
         Some(c) => resolve(cfg, c)?,
         None => resolve(cfg, &cfg.roots.first().ok_or("no roots configured")?.to_string_lossy())?,
     };
-    let mut child = Command::new(&argv[0])
+    let mut cmd = Command::new(&argv[0]);
+    let mut child = hide(&mut cmd)
         .args(&argv[1..])
         .current_dir(&cwd)
         .stdin(Stdio::null())
@@ -319,10 +330,12 @@ fn run_preset(cfg: &Config, args: &Value) -> Result<String, String> {
     let code = loop {
         match child.try_wait() {
             Ok(Some(s)) => break s.code(),
-            Ok(None) if start.elapsed() > CMD_TIMEOUT => {
+            Ok(None) if start.elapsed() > timeout => {
+                // Kill the whole tree: cargo spawns cargo + rustc + test binaries.
+                let _ = hide(&mut Command::new("taskkill")).args(["/T", "/F", "/PID", &child.id().to_string()]).stdout(Stdio::null()).stderr(Stdio::null()).status();
                 let _ = child.kill();
                 let _ = child.wait();
-                return Err(format!("`{name}` timed out after {}s", CMD_TIMEOUT.as_secs()));
+                return Err(format!("`{name}` timed out after {}s", timeout.as_secs()));
             }
             Ok(None) => thread::sleep(Duration::from_millis(50)),
             Err(e) => return Err(e.to_string()),
@@ -491,4 +504,15 @@ mod tests {
         let d = sandbox("unk");
         assert!(call(&cfg(&d), "shell", &json!({}), true).unwrap_err().contains("unknown tool"));
     }
+}
+
+/// No console window for preset children (the detached run-preset CLI has no console,
+/// so cargo would otherwise get a fresh visible one).
+fn hide(c: &mut Command) -> &mut Command {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        c.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+    }
+    c
 }

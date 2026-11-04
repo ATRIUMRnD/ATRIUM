@@ -10,7 +10,7 @@ poll_ms = 250
 [[stream]]
 name = "atrium"
 pubkey = "/Users/xingxerx/dev/atrium-anchor/watch/keys/atrium.pk"
-silence_secs = 90
+silence_secs = 180
 
 [[stream]]
 name = "video-watch"

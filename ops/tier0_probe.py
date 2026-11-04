@@ -15,3 +15,19 @@ cert = run_route_request(req, emit_report=True, memory=None)
 print("elapsed %.1fs" % (time.time()-t))
 print("backend:", cert.metadata.get("execution_backend"), "energy", cert.energy if hasattr(cert,"energy") else None, "optimal", cert.is_optimal)
 print("report backend:", cert.metadata["route_report"]["backend"], "tier", cert.metadata["route_report"]["tier"])
+# Where it really ran. qiskit_exec falls back to CPU on any GPU error and only notes it in
+# metadata, so "aer_gpu" in the report is the plan, not proof. Find device / fallback anywhere.
+def _find(d, key, out):
+    if isinstance(d, dict):
+        for k, v in d.items():
+            if k == key: out.append(v)
+            _find(v, key, out)
+    elif isinstance(d, (list, tuple)):
+        for v in d: _find(v, key, out)
+    return out
+devices = _find(cert.metadata, "device", [])
+fallback = _find(cert.metadata, "gpu_fallback_reason", [])
+print("device:", devices or "unrecorded", "gpu_fallback:", fallback or "none")
+if fallback or "CPU" in devices:
+    print("RESULT: CPU FALLBACK (not a GPU pass)"); sys.exit(3)
+print("RESULT: GPU OK" if "GPU" in devices else "RESULT: device unrecorded")

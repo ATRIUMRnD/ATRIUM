@@ -54,6 +54,8 @@ kind = "managed"
 exe = "D:/dev/bin/atrium-keepalive.exe"
 args = ["--dir", "D:/ATRIUM/ops/atrium-state/keepalive", "--every", "5",
         "--target", "peer:laptop=100.121.3.55:22",
+        "--target", "peer:mini=100.111.252.86:22",
+        "--target", "peer:mini-anchor=100.111.252.86:7421",
         "--target", "lan:router=192.168.1.1:80",
         "--target", "wan:cloudflare=1.1.1.1:443"]
 cwd = "D:/ATRIUM/ops"
@@ -63,11 +65,13 @@ fresh_secs = 60
 [[room]]
 name = "ductei-sync"
 process = "ductei-sync.exe"
+task = "ductei-sync-serve"
 tcp = "100.106.147.75:7420"
 
 [[room]]
 name = "xing-pc-mcp"
 process = "xing-pc-mcp.exe"
+task = "xing-pc-mcp"
 
 # -- managed rooms: atrium spawns, logs (state/logs/<name>.log) and restarts --
 
@@ -87,6 +91,13 @@ cwd = "D:/ATRIUM/DUCTEI"
 requires = ["ductei-node"]
 
 # -- verify: `atrium verify` runs these in order, chains each outcome, then verifies its own chain --
+
+[[room]]
+name = "fleet-bot"
+kind = "managed"
+exe = "D:/dev/bin/atrium-bot.exe"
+args = ["fleet", "D:/ATRIUM/ops/atrium.toml", "bot"]
+cwd = "D:/ATRIUM/ops"
 
 [[verify]]
 name = "qhr-chain"
@@ -126,7 +137,12 @@ timeout_secs = 30
 # -- fleet: phone control (atrium fleet <config> <verb>); Claude presets and the Telegram bot call this --
 [fleet]
 dir = "D:/ATRIUM/ops/atrium-state/fleet"
-telegram_env = "D:/ATRIUM/ops/atrium-state/fleet/telegram.env"
+# Bot token lives in the Controlled-Folder-Access protected private folder, never in the repo or state dir.
+telegram_env = "D:/ATRIUM/private/telegram.env"
+# xing-pc-mcp audit chain: the bot pushes new unauthorized hits on the public /mcp endpoint.
+mcp_audit = "C:/Users/xing/.xing-pc-mcp/audit.chain.jsonl"
+# ductei-agent reports (charter goal 0); the bot forwards each new line.
+agent_outbox = "D:/ATRIUM/ops/atrium-state/agent/outbox.jsonl"
 
 [[fleet.machine]]
 name = "mini"

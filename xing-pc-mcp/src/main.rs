@@ -31,8 +31,42 @@ fn main() {
     }
 }
 
+/// `run-preset <name> <cwd> <out-file>`: the agent harness's way in (ductei-agent's
+/// PresetDispatcher). Same policy as the MCP tool: preset by name only, cwd under the roots,
+/// kill switch honoured, every call on the audit chain. The result lands in <out-file>
+/// (must sit under the roots) via tmp + rename, so a reader never sees half a file.
+fn run_preset_cli() -> anyhow::Result<()> {
+    let a: Vec<String> = std::env::args().skip(2).collect();
+    let [name, cwd, out] = a.as_slice() else {
+        anyhow::bail!("usage: xing-pc-mcp run-preset <name> <cwd> <out-file>");
+    };
+    let cfg = config::Config::load_or_init()?;
+    let out_path = std::path::Path::new(out);
+    let parent = out_path.parent().ok_or_else(|| anyhow::anyhow!("out-file has no parent"))?;
+    let parent = tools::resolve(&cfg, &parent.to_string_lossy()).map_err(|e| anyhow::anyhow!(e))?;
+    let file = out_path.file_name().ok_or_else(|| anyhow::anyhow!("out-file has no name"))?;
+    if tools::denied(&cfg, &file.to_string_lossy()) {
+        anyhow::bail!("out-file name is on the deny list");
+    }
+    let dest = parent.join(file);
+    let (ok, output) = if config::killed() {
+        (false, "kill switch is on; preset refused".to_string())
+    } else {
+        match tools::run_preset_for(&cfg, &serde_json::json!({"name": name, "cwd": cwd}), tools::DETACHED_TIMEOUT) {
+            Ok(s) => (true, s),
+            Err(e) => (false, e),
+        }
+    };
+    audit::record(serde_json::json!({"event": "cli_run_preset", "name": name, "cwd": cwd, "ok": ok}));
+    let tmp = dest.with_extension("tmp");
+    std::fs::write(&tmp, serde_json::to_string(&serde_json::json!({"ok": ok, "output": output}))?)?;
+    std::fs::rename(&tmp, &dest)?;
+    Ok(())
+}
+
 fn run() -> anyhow::Result<()> {
     match std::env::args().nth(1).as_deref() {
+        Some("run-preset") => return run_preset_cli(),
         Some("kill") => {
             config::set_killed(true)?;
             audit::record(serde_json::json!({"event": "kill_on"}));
@@ -148,7 +182,7 @@ fn run() -> anyhow::Result<()> {
             return Ok(());
         }
         Some(other) => {
-            anyhow::bail!("unknown command `{other}` (kill, unkill, url, write-url, gpu-key, enable-write, disable-write, approve, pending, verify-log, verify-memory, memory-pubkey, config-path)");
+            anyhow::bail!("unknown command `{other}` (run-preset, kill, unkill, url, write-url, gpu-key, enable-write, disable-write, approve, pending, verify-log, verify-memory, memory-pubkey, config-path)");
         }
         _ => {}
     }

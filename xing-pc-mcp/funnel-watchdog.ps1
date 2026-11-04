@@ -1,4 +1,4 @@
-# xing-pc-mcp Funnel watchdog. Checks that Tailscale Funnel still forwards the public
+﻿# xing-pc-mcp Funnel watchdog. Checks that Tailscale Funnel still forwards the public
 # address to the local server, and turns it back on if not. Safe to run any time.
 #   D:\ATRIUM\xing-pc-mcp\funnel-watchdog.ps1              (check once, fix if needed)
 #   D:\ATRIUM\xing-pc-mcp\funnel-watchdog.ps1 -Install     (run every 5 minutes, hidden)
@@ -9,6 +9,8 @@ $task   = 'xing-pc-mcp-funnel'
 $port   = 8787
 $public = 'https://xing-pc.tail8b5cd4.ts.net/mcp'
 $log    = Join-Path $PSScriptRoot 'funnel-watchdog.log'
+# Own probes carry this UA so the Telegram bot can skip them (they stay in the audit chain).
+$ua     = 'atrium-funnel-watchdog/1'
 
 function Log($m) {
     if ((Test-Path $log) -and (Get-Item $log).Length -gt 256KB) { Move-Item $log "$log.old" -Force }
@@ -40,7 +42,7 @@ if (-not $ts) { Log "tailscale not found on PATH"; exit 1 }
 
 # 1. Local server must be up first; restarting it is the other task's job.
 $local = $false
-try { $null = Invoke-WebRequest "http://127.0.0.1:$port/mcp" -Method Post -Body '{}' -ContentType 'application/json' -UseBasicParsing -TimeoutSec 5; $local = $true }
+try { $null = Invoke-WebRequest "http://127.0.0.1:$port/mcp" -Method Post -Body '{}' -ContentType 'application/json' -UserAgent $ua -UseBasicParsing -TimeoutSec 5; $local = $true }
 catch { if ($_.Exception.Response) { $local = $true } }
 if (-not $local) { Log "local server not answering on $port; leaving Funnel alone"; exit 0 }
 
@@ -51,7 +53,7 @@ $configured = $status -match "127\.0\.0\.1:$port" -and $status -match 'Funnel on
 # 3. The public address must answer (401 = auth working = alive).
 $reachable = $false
 if ($configured) {
-    try { $null = Invoke-WebRequest $public -Method Post -Body '{}' -ContentType 'application/json' -UseBasicParsing -TimeoutSec 10; $reachable = $true }
+    try { $null = Invoke-WebRequest $public -Method Post -Body '{}' -ContentType 'application/json' -UserAgent $ua -UseBasicParsing -TimeoutSec 10; $reachable = $true }
     catch { if ($_.Exception.Response) { $reachable = $true } }
 }
 

@@ -1,0 +1,149 @@
+# atrium.toml: the one loop. Read by D:\dev\bin\atrium.exe (DUCTEI\atrium-ctl).
+#   atrium up|status|verify|down D:\ATRIUM\ops\atrium.toml
+# Rooms are checked in order every tick; managed rooms start only when their
+# `requires` are up. Every state change and a beat every `beat_every` ticks is
+# a receipt on D:\ATRIUM\ops\atrium-state\receipts.jsonl (ML-DSA-65, DPAPI key).
+
+state = "D:/ATRIUM/ops/atrium-state"
+tick_ms = 1000
+beat_every = 60
+# Peer anchor exports the own-chain check must agree with (fetched by the
+# "fetch-laptop-anchors" verify step below).
+anchor_files = ["D:/ATRIUM/ops/atrium-state/peer-anchors/laptop-accepted.jsonl", "D:/ATRIUM/ops/atrium-state/peer-anchors/mini-accepted.jsonl"]
+
+# Chain-head anchors: every 60 receipts the head is signed and pushed to the
+# laptop over QFLTL (ML-KEM-768 + AES-256-GCM, mutual pin). Never plaintext.
+[anchor]
+every = 1
+peers = ["100.111.252.86:7421", "100.121.3.55:7421"]
+encrypt = true
+
+[sign]
+scheme = "ml-dsa-65"
+key_store = "dpapi"
+pubkey_fingerprint = "f46ba76e8e0738457054db5a99b799f190e93a853d0d9f198af4d33dfa02b0a3"
+
+# -- external rooms: owned by scheduled tasks, atrium watches and chains them --
+
+# ward is one-shot (task reruns it every 15 min); healthy = timeline written in the last 45 min.
+[[room]]
+name = "ward"
+fresh_file = "C:/me/backup/ward/timeline.jsonl"
+fresh_secs = 2700
+
+# The node loop (pc <-> laptop heartbeats over UDP 7720). Managed here because
+# `ductei-node supervise` stops for good after 3 restarts/hour and the old
+# watchdog task could not tell (the supervise shell stays alive). Health is
+# its own status.txt, rewritten every beat.
+[[room]]
+name = "ductei-node"
+kind = "managed"
+exe = "D:/dev/ductei-node/ductei-node.exe"
+args = ["run", "--name", "pc", "--id", "1", "--listen", "100.106.147.75:7720",
+        "--peer", "laptop=100.121.3.55:7720", "--dir", "D:/dev/ductei-node/data",
+        "--html", "C:/me/www/nodes.html"]
+cwd = "D:/dev/ductei-node"
+fresh_file = "D:/dev/ductei-node/data/status.txt"
+fresh_secs = 120
+
+# Link detector: TCP probes every 5 s to the laptop (peer), the router (lan)
+# and 1.1.1.1 (wan). events.jsonl says which link dropped: peer, lan or wan.
+[[room]]
+name = "keepalive"
+kind = "managed"
+exe = "D:/dev/bin/atrium-keepalive.exe"
+args = ["--dir", "D:/ATRIUM/ops/atrium-state/keepalive", "--every", "5",
+        "--target", "peer:laptop=100.121.3.55:22",
+        "--target", "peer:mini=100.111.252.86:22",
+        "--target", "peer:mini-anchor=100.111.252.86:7421",
+        "--target", "lan:router=192.168.1.1:80",
+        "--target", "wan:cloudflare=1.1.1.1:443"]
+cwd = "D:/ATRIUM/ops"
+fresh_file = "D:/ATRIUM/ops/atrium-state/keepalive/status.json"
+fresh_secs = 60
+
+[[room]]
+name = "ductei-sync"
+process = "ductei-sync.exe"
+tcp = "100.106.147.75:7420"
+
+[[room]]
+name = "xing-pc-mcp"
+process = "xing-pc-mcp.exe"
+
+# -- managed rooms: atrium spawns, logs (state/logs/<name>.log) and restarts --
+
+# The closed loop: VEYN -> relay -> Qallow store -> propose -> limend -> relay.
+# Offline simulator here; IBM online runs stay with ops\atrium-online.ps1,
+# which owns the DPAPI secrets and the sleep guard.
+[[room]]
+name = "loop"
+kind = "managed"
+exe = "C:/Users/xing/venvs/limen/Scripts/python.exe"
+args = ["scripts/atrium_up.py",
+        "--root", "D:/ATRIUM/ops/atrium-state/loop",
+        "--limen", "D:/ATRIUM/LIMEN",
+        "--qallow-cli", "D:/ATRIUM/Qallow/target/debug/qallow.exe",
+        "--veyn", "D:/VEYN", "--veyn-daemon"]
+cwd = "D:/ATRIUM/DUCTEI"
+requires = ["ductei-node"]
+
+# -- verify: `atrium verify` runs these in order, chains each outcome, then verifies its own chain --
+
+[[verify]]
+name = "qhr-chain"
+cmd = ["D:/dev/bin/qhr.exe", "verify", "D:/ATRIUM/ops/logs/smoke/work-qhr/state", "--allow-unpinned"]
+
+# Pull the laptop's anchor log (read only) first, so gate-chain and atrium-chain
+# can both catch a cut tail.
+[[verify]]
+name = "fetch-laptop-anchors"
+cmd = ["C:/Windows/System32/OpenSSH/scp.exe", "-q", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", "-i", "C:/Users/xing/.ssh/id_ed25519_laptop", "there@100.121.3.55:C:/Users/there/anchor-peer/inbound/accepted.jsonl", "D:/ATRIUM/ops/atrium-state/peer-anchors/laptop-accepted.jsonl"]
+timeout_secs = 30
+
+[[verify]]
+name = "gate-chain"
+cmd = ["D:/dev/bin/ductei-mcp-gate.exe", "verify", "D:/dev/video-watch/ductei",
+       "--fingerprint", "73095f9240c66c5588523913b226baa38636c79c8cdd5fbb67e108af2a930944",
+       "--anchor-file", "D:/ATRIUM/ops/atrium-state/peer-anchors/laptop-accepted.jsonl"]
+
+# Full nightly (A..G: DUCTEI e2e, LIMEN GPU tier 0, router gate, LIMEN IR,
+# atrium-spec drift, QHR qpu lane, qhr-sched). Exit 0 iff all pass.
+[[verify]]
+name = "nightly"
+cmd = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "D:/ATRIUM/ops/nightly.ps1"]
+expect_text = "ALL PASS"
+timeout_secs = 3600
+
+[[verify]]
+name = "ward-chain"
+cmd = ["C:/Program Files/ward/ward.exe", "verify"]
+expect_text = "[PASS] I7"
+
+[[verify]]
+name = "fetch-mini-anchors"
+cmd = ["C:/Windows/System32/OpenSSH/scp.exe", "-q", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", "-i", "C:/Users/xing/.ssh/id_ed25519_mac", "xingxerx@100.111.252.86:dev/atrium-anchor/state/inbound/accepted.jsonl", "D:/ATRIUM/ops/atrium-state/peer-anchors/mini-accepted.jsonl"]
+timeout_secs = 30
+
+# -- fleet: phone control (atrium fleet <config> <verb>); Claude presets and the Telegram bot call this --
+[fleet]
+dir = "D:/ATRIUM/ops/atrium-state/fleet"
+# Bot token lives in the Controlled-Folder-Access protected private folder, never in the repo or state dir.
+telegram_env = "D:/ATRIUM/ops/atrium-state/fleet/telegram.env"
+# xing-pc-mcp audit chain: the bot pushes new unauthorized hits on the public /mcp endpoint.
+mcp_audit = "C:/Users/xing/.xing-pc-mcp/audit.chain.jsonl"
+agent_outbox = "D:/ATRIUM/ops/atrium-state/agent/outbox.jsonl"
+
+[[fleet.machine]]
+name = "mini"
+host = "100.111.252.86"
+ssh = "xingxerx@100.111.252.86"
+key = "D:/ATRIUM/ops/atrium-state/fleet/keys/id_ed25519_fleet"
+mac = "1c:f6:4c:6e:c3:a3"
+broadcast = "192.168.1.255"
+
+[[fleet.machine]]
+name = "laptop"
+host = "100.121.3.55"
+ssh = "there@100.121.3.55"
+key = "D:/ATRIUM/ops/atrium-state/fleet/keys/id_ed25519_fleet"
